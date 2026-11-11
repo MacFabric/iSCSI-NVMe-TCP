@@ -13,7 +13,7 @@ options:
   deploymentTarget:
     macOS: "26.0"
   createIntermediateGroups: true
-  knownRegions: [en, zh-Hans]
+  knownRegions: [en, es, zh-Hans]
   developmentLanguage: en
 
 packages:

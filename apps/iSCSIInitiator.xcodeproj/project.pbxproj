@@ -170,6 +170,7 @@
 		1E7A00F869F8056AEACDFFAA /* iSCSIDext.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = iSCSIDext.cpp; sourceTree = "<group>"; };
 		205C0EEE79FC0ACFEE720391 /* FSKitEnablement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FSKitEnablement.swift; sourceTree = "<group>"; };
 		24DACD1EADC8A79E88E09803 /* AutoAttacher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoAttacher.swift; sourceTree = "<group>"; };
+		2A51665D23F6697ABEC86D11 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		3071CFD21D92FAF593C1D5E5 /* DiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryView.swift; sourceTree = "<group>"; };
 		3079D57585D96DD2ADCA8879 /* iSCSIFSExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iSCSIFSExtension.swift; sourceTree = "<group>"; };
 		3585A0A81F56D11FC7F6743D /* SetupStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupStep.swift; sourceTree = "<group>"; };
@@ -638,6 +639,7 @@
 			knownRegions = (
 				Base,
 				en,
+				es,
 				"zh-Hans",
 			);
 			mainGroup = 42F85755989DD49B28E3E3E8;
@@ -806,6 +808,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				979635E6CF9EE6B49425E909 /* en */,
+				2A51665D23F6697ABEC86D11 /* es */,
 				F2BAFC4F0686DC68FFCFCA7C /* zh-Hans */,
 			);
 			name = InfoPlist.strings;
