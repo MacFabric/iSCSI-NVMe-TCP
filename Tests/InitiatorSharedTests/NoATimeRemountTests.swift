@@ -1,5 +1,6 @@
 import Darwin
 import Testing
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 /// Rebuilding a volume's mount options so `mount -u` adds `noatime` and

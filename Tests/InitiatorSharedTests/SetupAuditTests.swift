@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 /// The rules behind the "No other copies registered" step and the daemon's

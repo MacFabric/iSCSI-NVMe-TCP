@@ -1,5 +1,6 @@
 import Foundation
 import iSCSIDaemon
+import InitiatorShared
 import iSCSIKit
 
 // iscsid — the iSCSI initiator daemon: a launchd LaunchDaemon vending the

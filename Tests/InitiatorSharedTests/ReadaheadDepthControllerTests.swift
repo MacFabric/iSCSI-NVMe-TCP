@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 /// The depth controller replaces the per-target workload rungs: hit rate is

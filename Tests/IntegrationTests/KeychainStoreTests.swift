@@ -11,6 +11,7 @@ import Foundation
 import Security
 import Testing
 @testable import iSCSIDaemon
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 /// A keychain that is just a dictionary.

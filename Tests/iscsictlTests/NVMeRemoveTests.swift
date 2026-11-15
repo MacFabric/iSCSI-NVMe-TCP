@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import InitiatorShared
 import iSCSIKit
 @testable import iscsictl
 

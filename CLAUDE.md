@@ -99,7 +99,6 @@ swift run iscsi-target-sim --port 3260 --capacity-mib 1024 &
 swift run iscsictl iscsi discover 127.0.0.1
 swift run iscsictl iscsi verify 127.0.0.1 --target iqn.2026-08.me.herko.sim:lun0 --write  # DESTRUCTIVE
 printf 'crash\n' | nc 127.0.0.1 3262      # target power loss with a dirty cache
-scripts/fuzz.sh 60                        # ASan fuzz of both PDU decoders
 
 # An EqualLogic-style group address: 3270 redirects every login to 3271.
 swift run iscsi-target-sim --port 3271 --control-port 0 &
@@ -114,6 +113,40 @@ swift run iscsictl nvme verify 127.0.0.1 --subsystem nqn.2026-08.me.herko.sim:di
 Against the NAS (TrueNAS SCALE 25.10, `nvmet` on 4420), `iscsictl nvme
 discover 192.168.20.1` is read-only; `verify --write` is not. The host NQN
 both commands print is what goes in the subsystem's allowed-hosts list.
+
+### The protocol packages
+
+The engines are MacFabric packages of their own, each with its unit tests,
+its integration suite against its own mock target, its ASan fuzz harness
+(`scripts/fuzz.sh`) and its own CI:
+
+- **FabricKit** — what both engines share: `ConnectionTransport`,
+  `NetworkTransport` with interface pinning, `MemoryPipe`, CRC32C,
+  `withDeadline`, the big-endian `Data` helpers, `BlockDeviceBackend`,
+  `SessionPolicy`/`SessionError`/`SessionEvent`. Its `FabricTestSupport`
+  product holds the mock targets' RAM disk, TCP listener and fault switches,
+  plus `testPolicy()`, `eventually` and `ConnectGate`.
+- **iSCSIKit** and **NVMeKit**, each re-exporting FabricKit (so `import
+  iSCSIKit` still brings `SessionPolicy` and friends), with `iSCSIMockTarget`
+  and `NVMeMockTarget` products that this repo's daemon tests and
+  `iscsi-target-sim` use.
+
+Versions are pinned twice, and both must move together. `Package.swift` takes
+an up-to-next-minor range and `Package.resolved` pins it for `swift test`;
+`apps/project.yml` names all three with `exactVersion`, because the app has no
+committed `Package.resolved` and Xcode would otherwise build whatever is
+newest. To ship a kit change: tag the kit (FabricKit first when it changed;
+iSCSIKit and NVMeKit name the FabricKit range they need), then here
+`swift package update`, the three `exactVersion` lines, and a regenerated
+`.pbxproj`.
+
+To change a kit and the app together, check the kit out beside this one and
+`swift package edit iSCSIKit --path ../iSCSIKit` (in Xcode, drag the folder
+into the project, which overrides the remote package). `swift package unedit`
+before committing; a `.package(path:)` must never be committed here. Tests in
+this repo still `@testable import` the kits, which works because SwiftPM builds
+dependencies with testing enabled in debug — but anything internal they reach
+is not API, and a kit release may move it.
 
 ### Releasing
 
@@ -150,20 +183,30 @@ LUN ──► FSKit file ──hdiutil (DiskImages2 opt-in on 27)──► /dev/
 LUN ──► shared-memory ring ──► iSCSIDext virtual SCSI HBA       (Backend B, parked)
 ```
 
-- **`Sources/iSCSIKit` is transport-free and side-effect-free on purpose.** No
-  sockets, no filesystem, no policy — that is what makes every path unit-testable
-  and fuzzable, and what lets `MemoryPipe` stand in for TCP in tests. Keep new
-  I/O out of it.
-- **`Sources/NVMeKit` is the NVMe/TCP twin of iSCSIKit** under the same rules,
-  depending on iSCSIKit only for the transport, CRC32C, `withDeadline`, the
-  session policy and `BlockDeviceBackend`. The daemon tells the protocols
+- **iSCSIKit is transport-free and side-effect-free on purpose.** No
+  sockets of its own, no filesystem, no policy — that is what makes every path
+  unit-testable and fuzzable, and what lets `MemoryPipe` stand in for TCP in
+  tests. Keep new I/O out of it, and keep this app out of it too: an XPC
+  model, a bundle identifier or a sentence for the user belongs in
+  `InitiatorShared`, which is where 27 such files went when the engines moved
+  out (2026-11-15).
+- **NVMeKit is the NVMe/TCP twin of iSCSIKit** under the same rules. Both
+  depend on FabricKit for the transport, CRC32C, `withDeadline`, the session
+  policy and `BlockDeviceBackend`, and neither knows the other exists. An NVMe
+  queue reports its close reasons as `NVMeConnectionError`, which
+  `ISCSIError` words exactly as it does iSCSI's `ConnectionError`. The daemon tells the protocols
   apart by the target name's prefix — `nqn.` is NVMe — in `DaemonCore.login`
   and nowhere else; `TargetRecord.targetIQN` carries the NQN and `lun` the
   namespace ID, with **no stored discriminator** (a new non-optional key
   would make every existing `targets.json` undecodable). The host NQN is
-  derived from the platform UUID in `HostIdentity`; **never change that
-  derivation** — TrueNAS allowed-hosts lists key on it, exactly the way the
+  derived from the platform UUID in `HostIdentity` (here) through
+  `NVMeHostIdentity` (NVMeKit); **never change that derivation**, on either
+  side — TrueNAS allowed-hosts lists key on it, exactly the way the
   initiator-name change once broke the iSCSI ACLs.
+- **`InitiatorShared` is what the app, the daemon, the extension and
+  `iscsictl` share that is not protocol**: the XPC protocol and models,
+  `ISCSIError`, `MountpointTag`, the mount and attach helpers, auto-attach,
+  login-item policy, setup audit and the read cache.
 - **`iSCSIDaemon` is the daemon core as a library**; `iscsid` is a thin
   XPC/launchd launcher on top, so the interesting logic is testable.
 - **`iSCSIVolume` is the FSKit extension's data path without the FSKit** —

@@ -14,6 +14,7 @@
 //
 
 import Foundation
+import InitiatorShared
 import iSCSIKit
 
 /// The directory everything the daemon keeps lives under.

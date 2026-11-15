@@ -20,6 +20,7 @@
 //
 
 import AppKit
+import InitiatorShared
 import iSCSIKit
 import os
 

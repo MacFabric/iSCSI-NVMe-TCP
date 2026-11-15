@@ -1,4 +1,5 @@
 import Testing
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 /// What an extension may ask a daemon that shipped in another build. Asking a

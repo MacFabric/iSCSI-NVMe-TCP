@@ -10,6 +10,7 @@
 import Foundation
 import Testing
 import os
+@testable import InitiatorShared
 @testable import iSCSIKit
 @testable import iSCSIVolume
 

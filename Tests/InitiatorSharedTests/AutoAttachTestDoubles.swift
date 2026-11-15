@@ -1,4 +1,5 @@
 import Foundation
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 /// A clock that moves only when the test moves it, so a five-minute run takes

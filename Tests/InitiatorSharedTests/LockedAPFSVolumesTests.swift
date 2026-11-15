@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 /// An encrypted, locked volume attaches like a blank disk: a device and

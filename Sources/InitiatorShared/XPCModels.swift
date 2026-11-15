@@ -8,6 +8,7 @@
 //
 
 import Foundation
+import iSCSIKit
 
 /// Identity and liveness of the running daemon. `SMAppService.status` cannot
 /// answer either: `.enabled` only means launchd is willing to start the job.

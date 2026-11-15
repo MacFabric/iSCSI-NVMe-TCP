@@ -9,6 +9,7 @@
 
 import AppKit
 import ServiceManagement
+import InitiatorShared
 import iSCSIKit
 
 @MainActor

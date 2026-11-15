@@ -1,4 +1,5 @@
 import Foundation
+import iSCSIKit
 
 /// What Discover offers for a target it found, given what is already saved.
 ///

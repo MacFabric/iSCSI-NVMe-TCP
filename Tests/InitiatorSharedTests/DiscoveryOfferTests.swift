@@ -9,6 +9,7 @@
 //
 
 import Testing
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 @Suite("What Discover offers for a target it found")

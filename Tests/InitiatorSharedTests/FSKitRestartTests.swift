@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 /// Restarting fskitd takes down every FSKit volume on the Mac, in every

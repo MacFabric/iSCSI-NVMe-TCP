@@ -22,6 +22,7 @@
 #if canImport(IOKit)
 import Foundation
 import IOKit
+import InitiatorShared
 import iSCSIKit
 
 // MARK: - Wire contract

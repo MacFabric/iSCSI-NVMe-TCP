@@ -1,14 +1,14 @@
 import Foundation
 import Testing
 @testable import iSCSIDaemon
+@testable import InitiatorShared
 @testable import iSCSIKit
-import MockTarget
+import iSCSIMockTarget
 
-/// Login redirects (RFC 7143 §11.13.5, status class 1). An EqualLogic group
-/// answers every normal login on its group address with "moved temporarily"
-/// and a member port; an initiator that only reports the redirect can never
-/// attach to one at all.
-@Suite("Integration: login redirects", .timeLimit(.minutes(1)))
+/// Login redirects (RFC 7143 §11.13.5, status class 1) as the daemon makes
+/// them. The session-level behaviour is iSCSIKit's own suite; what is tested
+/// here is that the daemon's connect carries the target's interface pin.
+@Suite("Integration: login redirects through the daemon", .timeLimit(.minutes(1)))
 struct LoginRedirectTests {
 
     /// Which portal each connect was for: "home" for the configured portal,
@@ -27,171 +27,6 @@ struct LoginRedirectTests {
         config.faults.redirectTo = address
         config.faults.redirectIsTemporary = temporary
         return config
-    }
-
-    static func dropping() -> MockTargetConfig {
-        var config = MockTargetConfig()
-        config.faults.dropAfterSentPDUs = 1
-        return config
-    }
-
-    /// Both factories draw from one fleet, so the configs are consumed in
-    /// connect order whichever portal the connect was for.
-    func makeSession(fleet: TargetFleet, log: ConnectLog,
-                     followsRedirects: Bool = true) -> ISCSISession {
-        let redirect: ISCSISession.RedirectTransportFactory? = followsRedirects
-            ? { @Sendable portal in
-                log.add("\(portal.host):\(portal.port)")
-                return await fleet.makeTransport()
-            }
-            : nil
-        return ISCSISession(
-            login: standardLogin(),
-            policy: testPolicy(),
-            transportFactory: {
-                log.add("home")
-                return await fleet.makeTransport()
-            },
-            redirectTransportFactory: redirect
-        )
-    }
-
-    @Test("a temporary redirect is followed to the address it names")
-    func followsTemporaryRedirect() async throws {
-        let fleet = TargetFleet(configs: [Self.redirecting(temporary: true), MockTargetConfig()])
-        let log = ConnectLog()
-        let session = makeSession(fleet: fleet, log: log)
-        try await session.activate()
-
-        #expect(log.all == ["home", "10.0.0.2:3261"])
-        let ready = try await session.execute(SCSITask(lun: 0, cdb: CDB.testUnitReady()))
-        #expect(ready.isGood)
-        try await session.logout()
-        await fleet.shutdown()
-    }
-
-    /// Temporary means this login only: EqualLogic picks the member per
-    /// login, so a recovery that went straight back to the old member would
-    /// defeat its load balancing and fail outright once that port moves.
-    @Test("recovery after a temporary redirect starts again at the configured portal")
-    func recoveryReturnsHomeAfterTemporaryRedirect() async throws {
-        let fleet = TargetFleet(configs: [
-            Self.redirecting(temporary: true), Self.dropping(),
-            Self.redirecting(temporary: true), MockTargetConfig(),
-        ])
-        let log = ConnectLog()
-        let session = makeSession(fleet: fleet, log: log)
-        try await session.activate()
-
-        let pattern = Data(repeating: 0x5A, count: 512)
-        _ = try await session.execute(SCSITask(
-            lun: 0, cdb: CDB.write16(lba: 3, blocks: 1), direction: .write(pattern)))
-        let read = try await session.execute(SCSITask(
-            lun: 0, cdb: CDB.read16(lba: 3, blocks: 1), direction: .read(expectedLength: 512)))
-        #expect(read.data == pattern)
-
-        #expect(log.all == ["home", "10.0.0.2:3261", "home", "10.0.0.2:3261"])
-        try await session.logout()
-        await fleet.shutdown()
-    }
-
-    /// §11.13.5: a permanent move is where the target now lives, so later
-    /// logins in this session go there directly.
-    @Test("recovery after a permanent redirect goes straight to the new address")
-    func recoveryKeepsPermanentRedirect() async throws {
-        let fleet = TargetFleet(configs: [
-            Self.redirecting(temporary: false), Self.dropping(), MockTargetConfig(),
-        ])
-        let log = ConnectLog()
-        let session = makeSession(fleet: fleet, log: log)
-        try await session.activate()
-
-        let pattern = Data(repeating: 0xA5, count: 512)
-        _ = try await session.execute(SCSITask(
-            lun: 0, cdb: CDB.write16(lba: 4, blocks: 1), direction: .write(pattern)))
-        let read = try await session.execute(SCSITask(
-            lun: 0, cdb: CDB.read16(lba: 4, blocks: 1), direction: .read(expectedLength: 512)))
-        #expect(read.data == pattern)
-
-        #expect(log.all == ["home", "10.0.0.2:3261", "10.0.0.2:3261"])
-        try await session.logout()
-        await fleet.shutdown()
-    }
-
-    @Test("a redirect loop gives up after a bounded number of hops")
-    func redirectLoopIsBounded() async throws {
-        let fleet = TargetFleet(configs: [Self.redirecting(temporary: true)])
-        let log = ConnectLog()
-        let session = makeSession(fleet: fleet, log: log)
-
-        await #expect(throws: ConnectionError.self) { try await session.activate() }
-        #expect(log.all.count == 1 + RedirectingLogin.maxRedirects)
-        await fleet.shutdown()
-    }
-
-    @Test("an unreadable TargetAddress surfaces the redirect instead of guessing")
-    func unparseableAddressSurfaces() async throws {
-        let fleet = TargetFleet(configs: [Self.redirecting(temporary: true, to: "[fe80::1")])
-        let log = ConnectLog()
-        let session = makeSession(fleet: fleet, log: log)
-
-        do {
-            try await session.activate()
-            Issue.record("expected the redirect to surface")
-        } catch ConnectionError.redirected(let address, _) {
-            #expect(address == "[fe80::1")
-        }
-        #expect(log.all == ["home"])
-        await fleet.shutdown()
-    }
-
-    /// Guards the existing contract for callers that cannot open a
-    /// connection to an arbitrary address (iscsictl's single transport).
-    @Test("without a redirect factory the redirect surfaces as before")
-    func noFactorySurfaces() async throws {
-        let fleet = TargetFleet(configs: [Self.redirecting(temporary: true)])
-        let log = ConnectLog()
-        let session = makeSession(fleet: fleet, log: log, followsRedirects: false)
-
-        do {
-            try await session.activate()
-            Issue.record("expected the redirect to surface")
-        } catch ConnectionError.redirected(let address, _) {
-            #expect(address == Self.member)
-        }
-        #expect(log.all == ["home"])
-        await fleet.shutdown()
-    }
-
-    // MARK: Without a session
-
-    /// iscsictl's verify and wipe drive a bare connection; they follow
-    /// redirects through the same code the session does.
-    @Test("a bare login follows a temporary redirect and reports no move")
-    func bareLoginFollowsTemporaryRedirect() async throws {
-        let fleet = TargetFleet(configs: [Self.redirecting(temporary: true), MockTargetConfig()])
-        let log = ConnectLog()
-        let outcome = try await RedirectingLogin.login(standardLogin()) { portal in
-            log.add(portal.map { "\($0.host):\($0.port)" } ?? "home")
-            return await fleet.makeTransport()
-        }
-
-        #expect(log.all == ["home", "10.0.0.2:3261"])
-        #expect(outcome.movedPermanentlyTo == nil)
-        let ready = try await outcome.connection.execute(SCSITask(lun: 0, cdb: CDB.testUnitReady()))
-        #expect(ready.isGood)
-        await fleet.shutdown()
-    }
-
-    @Test("a bare login reports a permanent move")
-    func bareLoginReportsPermanentMove() async throws {
-        let fleet = TargetFleet(configs: [Self.redirecting(temporary: false), MockTargetConfig()])
-        let outcome = try await RedirectingLogin.login(standardLogin()) { _ in
-            await fleet.makeTransport()
-        }
-        #expect(outcome.movedPermanentlyTo
-                == TargetPortal(host: "10.0.0.2", port: 3261, portalGroupTag: 1))
-        await fleet.shutdown()
     }
 
     // MARK: Through the daemon

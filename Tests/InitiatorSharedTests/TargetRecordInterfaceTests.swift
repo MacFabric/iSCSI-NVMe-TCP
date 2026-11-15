@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 /// Every installed targets.json predates these keys, and a decode failure

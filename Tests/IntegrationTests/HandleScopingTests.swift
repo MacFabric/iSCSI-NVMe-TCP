@@ -10,8 +10,10 @@
 import Foundation
 import Testing
 @testable import iSCSIDaemon
+@testable import InitiatorShared
 @testable import iSCSIKit
-import MockTarget
+import iSCSIMockTarget
+import NVMeMockTarget
 
 @Suite("Per-connection session ownership")
 struct HandleScopingTests {

@@ -44,6 +44,13 @@ This is the same wall that stalled the old `iscsi-osx` kext port.
                                           └──────────► kernel SCSI stack → /dev/diskN
 ```
 
+Since 2026-11-15 iSCSIKit and NVMeKit are packages of their own,
+[MacFabric/iSCSIKit](https://github.com/MacFabric/iSCSIKit) and
+[MacFabric/NVMeKit](https://github.com/MacFabric/NVMeKit), on a shared
+[MacFabric/FabricKit](https://github.com/MacFabric/FabricKit). The sections
+below describe them as built; what was this app's own code inside iSCSIKit
+(XPC models, mount helpers, the read cache) is the `InitiatorShared` target.
+
 ## iSCSIKit (done)
 
 Transport-free protocol core, so every path is unit-testable and fuzzable:
@@ -77,7 +84,8 @@ other exists. It depends on iSCSIKit for what is protocol-neutral there — the
 byte-stream `ConnectionTransport`, CRC32C (the same polynomial, init, final
 XOR and little-endian wire form NVMe/TCP's HDGST/DDGST use), `withDeadline`,
 `SessionPolicy`/`SessionEvent`, and the `BlockDeviceBackend` seam — so no
-shared file had to move. Wire constants were cross-checked against Linux
+shared file had to move. (When the engines became packages, those shared
+pieces became FabricKit, which both depend on.) Wire constants were cross-checked against Linux
 `include/linux/nvme.h` and `nvme-tcp.h`, and then against `nvmet` itself:
 the one thing the NAS caught that the spec reading did not was the Connect
 data block being 1024 bytes, answered as "Data SGL Length Invalid".

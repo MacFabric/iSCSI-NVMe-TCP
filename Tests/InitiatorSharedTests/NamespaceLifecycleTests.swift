@@ -1,4 +1,5 @@
 import Testing
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 struct NamespaceLifecycleTests {

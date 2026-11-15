@@ -1,4 +1,5 @@
 import Foundation
+import iSCSIKit
 
 /// One row of the interface picker.
 public struct InterfaceChoice: Sendable, Equatable, Identifiable {

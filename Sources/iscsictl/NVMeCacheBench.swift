@@ -1,6 +1,7 @@
 import ArgumentParser
 import Foundation
 import NVMeKit
+import InitiatorShared
 import iSCSIKit
 
 // iscsictl nvme cache-bench — the FSKit extension's read cache, driven over

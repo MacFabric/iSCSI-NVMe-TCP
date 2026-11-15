@@ -8,6 +8,7 @@
 //
 
 import SwiftUI
+import InitiatorShared
 import iSCSIKit
 
 struct DiscoveryView: View {

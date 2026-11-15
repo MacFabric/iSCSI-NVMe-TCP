@@ -37,9 +37,11 @@ jobs:
       - name: Show toolchain
         run: swift --version
 
-      # The protocol engine, the daemon core, and everything that crosses XPC.
-      # No signing, no Xcode project, no FSKit — this half of the codebase is
-      # deliberately free of platform I/O so it can be tested anywhere.
+      # The daemon core, the volume data path, and everything that crosses
+      # XPC; the protocol engines are tested in their own repositories
+      # (FabricKit, iSCSIKit, NVMeKit). No signing, no Xcode project, no
+      # FSKit — this half of the codebase is deliberately free of platform
+      # I/O so it can be tested anywhere.
       - name: swift build
         run: swift build
 

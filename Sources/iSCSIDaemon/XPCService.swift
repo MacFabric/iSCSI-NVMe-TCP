@@ -1,6 +1,7 @@
 #if canImport(Network)
 import Foundation
 import os
+import InitiatorShared
 import iSCSIKit
 
 /// XPC reply blocks are safe to invoke from any thread but aren't typed

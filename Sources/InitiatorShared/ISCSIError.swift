@@ -8,6 +8,8 @@
 //
 
 import Foundation
+import iSCSIKit
+import NVMeKit
 
 public enum ISCSIError {
     public static let domain = "me.herko.iSCSIInitiator.ErrorDomain"
@@ -90,6 +92,15 @@ public enum ISCSIError {
         _ error: Error, _ identity: LoginIdentity? = nil
     ) -> (Code, String, String?, String?) {
         switch error {
+        // An NVMe/TCP queue's own close reasons: the subset of iSCSI's
+        // ConnectionError that applies to a queue, and worded the same way.
+        case let e as NVMeConnectionError:
+            switch e {
+            case .closed: return classify(ConnectionError.closed, identity)
+            case .connectionLost(let why): return classify(ConnectionError.connectionLost(why), identity)
+            case .protocolError(let why): return classify(ConnectionError.protocolError(why), identity)
+            }
+
         case let e as ConnectionError:
             switch e {
             case .closed:

@@ -1,4 +1,5 @@
 import Testing
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 /// What setup may do about `/usr/local/bin/iscsictl`, given what is there.

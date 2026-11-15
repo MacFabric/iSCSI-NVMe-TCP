@@ -12,6 +12,7 @@
 //
 
 import Foundation
+import InitiatorShared
 import iSCSIKit
 
 public actor TargetStore {

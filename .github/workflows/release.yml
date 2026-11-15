@@ -181,12 +181,13 @@ jobs:
       - name: Install build tools
         run: scripts/install-build-tools.sh "$RUNNER_TEMP/tools" xcodegen create-dmg
 
-      # Sparkle, the only package the app pulls, is fetched here — before any
-      # certificate is imported or key written — rather than inside the
-      # archive, which runs with every credential present. It is pinned to an
-      # exact version in apps/project.yml, and SwiftPM checks its binary
-      # artifact's checksum. release.sh's archive then finds it already in
-      # DerivedData.
+      # The packages the app pulls (Sparkle, swift-argument-parser, and the
+      # protocol engines FabricKit, iSCSIKit and NVMeKit) are fetched here —
+      # before any certificate is imported or key written — rather than inside
+      # the archive, which runs with every credential present. Each is pinned
+      # to an exact version in apps/project.yml, and SwiftPM checks Sparkle's
+      # binary artifact's checksum. release.sh's archive then finds them
+      # already in DerivedData.
       - name: Resolve Swift packages
         run: |
           xcodebuild -resolvePackageDependencies -project apps/iSCSIInitiator.xcodeproj \

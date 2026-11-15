@@ -1,4 +1,5 @@
 import Testing
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 /// The disk image layer of an attach, given what `hdiutil` already has bound to

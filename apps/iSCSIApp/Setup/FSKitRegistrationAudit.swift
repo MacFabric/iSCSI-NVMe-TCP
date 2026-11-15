@@ -31,6 +31,7 @@
 //
 
 import Foundation
+import InitiatorShared
 import iSCSIKit
 
 enum FSKitRegistrationAudit {

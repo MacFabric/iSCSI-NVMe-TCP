@@ -1,4 +1,5 @@
 import Testing
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 /// Which engine attaches `lun0.img`. `hdiutil` by default; DiskImages2 only by

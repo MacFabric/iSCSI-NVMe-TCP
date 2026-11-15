@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 /// Which block size a LUN's GPT was written with, from its first 8 KiB —

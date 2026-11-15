@@ -9,7 +9,9 @@
 
 import Foundation
 import Testing
+@testable import InitiatorShared
 @testable import iSCSIKit
+import NVMeKit
 
 @Suite("Error mapping across XPC")
 struct ISCSIErrorTests {
@@ -148,6 +150,24 @@ struct ISCSIErrorTests {
         let lost = ISCSIError.nsError(from: ConnectionError.connectionLost("EPIPE"))
         #expect(timeout.code == ISCSIError.Code.taskTimedOut.rawValue)
         #expect(lost.code == ISCSIError.Code.connectionLost.rawValue)
+    }
+
+    /// NVMeKit has its own close reasons for a queue, which used to be
+    /// iSCSIKit's ConnectionError; the app must still say the same thing.
+    @Test("an NVMe queue's close reasons read like the iSCSI connection's")
+    func nvmeConnectionErrorsMatchISCSI() {
+        let pairs: [(NVMeConnectionError, ConnectionError)] = [
+            (.closed, .closed),
+            (.connectionLost("EPIPE"), .connectionLost("EPIPE")),
+            (.protocolError("bad PDU"), .protocolError("bad PDU")),
+        ]
+        for (nvme, iscsi) in pairs {
+            let mapped = ISCSIError.nsError(from: nvme)
+            let reference = ISCSIError.nsError(from: iscsi)
+            #expect(mapped.code == reference.code)
+            #expect(mapped.localizedDescription == reference.localizedDescription)
+            #expect(mapped.localizedRecoverySuggestion == reference.localizedRecoverySuggestion)
+        }
     }
 
     /// Sense bytes are the first thing a storage vendor asks for. They are

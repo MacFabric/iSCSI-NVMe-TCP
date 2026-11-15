@@ -9,6 +9,7 @@
 
 #if canImport(Darwin)
 import Darwin
+import InitiatorShared
 import iSCSIKit
 
 enum MountTable {

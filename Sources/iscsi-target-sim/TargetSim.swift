@@ -1,6 +1,7 @@
 import ArgumentParser
 import Foundation
-import MockTarget
+import iSCSIMockTarget
+import NVMeMockTarget
 import iSCSIKit
 
 /// A local iSCSI (or, with --nvme, NVMe/TCP) target, for two things the real

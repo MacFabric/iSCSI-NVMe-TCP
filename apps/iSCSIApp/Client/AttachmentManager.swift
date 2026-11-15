@@ -22,6 +22,7 @@
 
 import AppKit
 import Foundation
+import InitiatorShared
 import iSCSIKit
 import os
 

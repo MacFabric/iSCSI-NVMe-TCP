@@ -1,4 +1,5 @@
 import Foundation
+import InitiatorShared
 import iSCSIKit
 
 /// How the FSKit volume answers reads and what kernel caching it grants for

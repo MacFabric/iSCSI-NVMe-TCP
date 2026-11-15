@@ -11,6 +11,7 @@ import Foundation
 import os
 import ServiceManagement
 import SwiftUI
+import InitiatorShared
 import iSCSIKit
 
 enum DaemonState: Equatable {

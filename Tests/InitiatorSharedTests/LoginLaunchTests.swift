@@ -1,6 +1,7 @@
 import CoreServices
 import Foundation
 import Testing
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 /// Which launches are login launches. Measured on the 26.6 VM with a probe
@@ -70,7 +71,7 @@ struct MainWindowLinkTests {
         // A rename on either side would not fail any build: the window would
         // simply stop opening at the end of a run with the menu bar item hidden.
         let plist = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()   // iSCSIKitTests
+            .deletingLastPathComponent()   // InitiatorSharedTests
             .deletingLastPathComponent()   // Tests
             .deletingLastPathComponent()   // repository root
             .appendingPathComponent("apps/iSCSIApp/Info.plist")

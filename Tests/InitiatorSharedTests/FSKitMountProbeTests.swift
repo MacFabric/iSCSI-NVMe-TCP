@@ -1,4 +1,5 @@
 import Testing
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 /// Reading a `mount -F` of the extension's local test store, which Setup

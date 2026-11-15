@@ -14,6 +14,7 @@
 //
 
 import Foundation
+import iSCSIKit
 
 public struct AutoAttachRun: Sendable, Equatable {
     /// Start to start, per target.

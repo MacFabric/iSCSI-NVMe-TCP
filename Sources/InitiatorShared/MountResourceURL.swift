@@ -11,6 +11,7 @@
 
 import Darwin
 import Foundation
+import iSCSIKit
 
 public enum MountResourceURL {
     /// nil for a host no login could reach: empty, already bracketed, or

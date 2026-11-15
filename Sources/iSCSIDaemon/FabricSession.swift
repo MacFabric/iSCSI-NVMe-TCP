@@ -1,5 +1,6 @@
 import Foundation
 import NVMeKit
+import InitiatorShared
 import iSCSIKit
 
 /// What `DaemonCore` needs from a session regardless of protocol: the

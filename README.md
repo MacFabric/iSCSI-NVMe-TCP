@@ -112,8 +112,7 @@ homelab. There is also a target simulator that can be, and was, used for destruc
 Test it yourself:
 
 ```bash
-swift test                          # unit + integration suite
-scripts/fuzz.sh 60                  # 60s ASan fuzz of the PDU decoder
+swift test                          # daemon, volume and XPC suites
 
 # Against a real target (e.g. your NAS):
 swift run iscsictl iscsi discover 192.168.1.50

@@ -1,6 +1,7 @@
 import ArgumentParser
 import Darwin
 import Foundation
+import InitiatorShared
 import iSCSIKit
 
 struct NVMeAttach: ParsableCommand {

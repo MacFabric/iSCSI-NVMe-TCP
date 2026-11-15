@@ -11,6 +11,7 @@
 import AppKit
 import Foundation
 import FSKit
+import InitiatorShared
 import iSCSIKit
 import os
 
