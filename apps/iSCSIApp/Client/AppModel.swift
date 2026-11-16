@@ -12,6 +12,7 @@ import Combine
 import Foundation
 import ServiceManagement
 import SwiftUI
+import InitiatorShared
 import iSCSIKit
 
 @MainActor

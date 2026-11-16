@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 @testable import iSCSIDaemon
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 /// The daemon's half of item 14: `refreshFSKitEnablement` kills fskitd as

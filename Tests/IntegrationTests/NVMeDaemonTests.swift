@@ -1,8 +1,10 @@
 import Foundation
 import Testing
-@testable import MockTarget
+@testable import iSCSIMockTarget
+@testable import NVMeMockTarget
 @testable import NVMeKit
 @testable import iSCSIDaemon
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 /// The daemon serving both protocols from one registry. The transport

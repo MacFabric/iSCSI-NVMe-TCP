@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import InitiatorShared
 import iSCSIKit
 
 /// Automatic, or one interface plus what to do when it cannot be used. Lives

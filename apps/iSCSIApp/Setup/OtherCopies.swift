@@ -13,6 +13,7 @@
 
 import AppKit
 import Foundation
+import InitiatorShared
 import iSCSIKit
 
 private let lsregisterPath = "/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"

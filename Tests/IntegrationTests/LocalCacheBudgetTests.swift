@@ -1,8 +1,10 @@
 import Foundation
 import Testing
 @testable import iSCSIDaemon
+@testable import InitiatorShared
 @testable import iSCSIKit
-import MockTarget
+import iSCSIMockTarget
+import NVMeMockTarget
 
 /// The cache size reaches the extension the way the readahead budget does:
 /// resolved from the record at login, keyed by the session handle, and only

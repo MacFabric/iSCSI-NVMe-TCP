@@ -3,9 +3,11 @@
 # Then open iSCSIInitiator.xcodeproj and build. CLAUDE.md says how to
 # regenerate the committed .pbxproj so CI's drift check stays quiet.
 #
-# The protocol engines (iSCSIKit, NVMeKit) live in the parent SwiftPM package
-# and are referenced as a local package, so the app and extensions share the
-# exact code that `swift test` and real-NAS verification exercise.
+# The protocol engines (iSCSIKit, NVMeKit) and the layer under them
+# (FabricKit) are MacFabric packages of their own. The daemon core, the
+# volume data path and InitiatorShared live in the parent SwiftPM package,
+# referenced as a local package, so the app and extensions share the exact
+# code that `swift test` and real-NAS verification exercise.
 
 name: iSCSIInitiator
 options:
@@ -20,8 +22,8 @@ packages:
   iSCSI:
     path: ..
   # Sparkle lives here rather than in Package.swift on purpose: it must not
-  # become a dependency of iSCSIKit, which the FSKit extension and the daemon
-  # both link. An updater has no business inside a filesystem extension or a
+  # become a dependency of the local package, which the FSKit extension and
+  # the daemon both link. An updater has no business inside a filesystem extension or a
   # root daemon.
   # Exact, not `from:`: with no Package.resolved committed for the app, a
   # range resolved to whatever 2.x was newest on the day of each release —
@@ -37,6 +39,22 @@ packages:
   swift-argument-parser:
     url: https://github.com/apple/swift-argument-parser
     exactVersion: 1.8.2
+  # The protocol engines. The local package depends on them too, but an Xcode
+  # target can link only a product of a package this project names. Exact for
+  # the reason Sparkle is, and the versions Package.resolved pins. Move all
+  # three together: iSCSIKit and NVMeKit each name the FabricKit they were
+  # released against.
+  iSCSIKit:
+    url: https://github.com/MacFabric/iSCSIKit
+    exactVersion: 0.1.0
+  NVMeKit:
+    url: https://github.com/MacFabric/NVMeKit
+    exactVersion: 0.1.0
+  # No target links FabricKit directly; it is named so that its version is
+  # pinned here rather than left to whichever 0.1.x is newest on build day.
+  FabricKit:
+    url: https://github.com/MacFabric/FabricKit
+    exactVersion: 0.1.0
 
 settings:
   base:
@@ -92,6 +110,8 @@ targets:
     dependencies:
       # The setup flow and the GUI speak ISCSIDaemonProtocol directly.
       - package: iSCSI
+        product: InitiatorShared
+      - package: iSCSIKit
         product: iSCSIKit
       - package: Sparkle
       - target: iSCSIFSExtension
@@ -143,6 +163,8 @@ targets:
         createIntermediateGroups: false
     dependencies:
       - package: iSCSI
+        product: InitiatorShared
+      - package: iSCSIKit
         product: iSCSIKit
       - package: iSCSI
         product: iSCSIDaemonKit
@@ -181,8 +203,10 @@ targets:
         createIntermediateGroups: false
     dependencies:
       - package: iSCSI
+        product: InitiatorShared
+      - package: iSCSIKit
         product: iSCSIKit
-      - package: iSCSI
+      - package: NVMeKit
         product: NVMeKit
       - package: iSCSI
         product: iSCSIDaemonKit
@@ -267,6 +291,8 @@ targets:
       - iSCSIFSExtension
     dependencies:
       - package: iSCSI
+        product: InitiatorShared
+      - package: iSCSIKit
         product: iSCSIKit
       # The volume's data path — LUNStore, BackingStore, DaemonStore — lives in
       # the package rather than here so the test suite can reach it. What stays

@@ -9,6 +9,7 @@
 import AppKit
 import ServiceManagement
 import SwiftUI
+import InitiatorShared
 import iSCSIKit
 
 /// Which group a target sits in, and which protocol a new one starts on.

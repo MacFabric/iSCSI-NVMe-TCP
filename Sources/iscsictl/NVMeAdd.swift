@@ -1,5 +1,6 @@
 import ArgumentParser
 import Foundation
+import InitiatorShared
 import iSCSIKit
 
 struct NVMeAdd: ParsableCommand {

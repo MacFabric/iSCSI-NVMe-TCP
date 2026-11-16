@@ -1,5 +1,6 @@
 import Foundation
-import MockTarget
+import iSCSIMockTarget
+import NVMeMockTarget
 
 /// The verbs the control socket understands. The teardown verbs are
 /// deliberately distinct — conflating them makes a crash test prove nothing:

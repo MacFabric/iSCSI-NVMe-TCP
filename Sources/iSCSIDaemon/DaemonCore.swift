@@ -1,5 +1,6 @@
 import Foundation
 import NVMeKit
+import InitiatorShared
 import iSCSIKit
 
 /// The daemon's session registry and block-I/O engine, independent of the XPC

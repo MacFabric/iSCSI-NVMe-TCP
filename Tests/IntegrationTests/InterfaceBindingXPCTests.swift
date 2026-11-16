@@ -1,8 +1,10 @@
 import Foundation
 import Testing
 @testable import iSCSIDaemon
+@testable import InitiatorShared
 @testable import iSCSIKit
-import MockTarget
+import iSCSIMockTarget
+import NVMeMockTarget
 
 /// Login and the editor's test probe take the pin from the saved record — a
 /// client cannot choose it, and the probe validates what an attach will run.

@@ -2,6 +2,7 @@ import ArgumentParser
 
 import Foundation
 import iSCSIDaemon
+import InitiatorShared
 import iSCSIKit
 
 /// A secret from a file or the environment — never from `argv`, which

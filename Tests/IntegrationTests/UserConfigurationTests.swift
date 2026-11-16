@@ -14,6 +14,7 @@ import Foundation
 import Security
 import Testing
 @testable import iSCSIDaemon
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 /// The account most tests speak for, without caring which it is.

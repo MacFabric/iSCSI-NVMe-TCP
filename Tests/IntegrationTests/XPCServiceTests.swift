@@ -13,8 +13,10 @@
 import Foundation
 import Testing
 @testable import iSCSIDaemon
+@testable import InitiatorShared
 @testable import iSCSIKit
-import MockTarget
+import iSCSIMockTarget
+import NVMeMockTarget
 
 @Suite("XPC service surface")
 struct XPCServiceTests {
@@ -474,23 +476,5 @@ struct XPCServiceTests {
         // Wiring only: the rule (an .app reports its path, anything else nil)
         // is unit-tested in SetupAuditTests.
         #expect(info.bundlePath == DaemonPlacement.bundlePath(ofBundleAt: Bundle.main.bundleURL))
-    }
-}
-
-/// Holds the first connect until the test opens it; later ones pass.
-actor ConnectGate {
-    private var opened = false
-    private var waiters: [CheckedContinuation<Void, Never>] = []
-    var isHeld: Bool { !waiters.isEmpty }
-
-    func pass() async {
-        guard !opened else { return }
-        await withCheckedContinuation { waiters.append($0) }
-    }
-
-    func open() {
-        opened = true
-        for waiter in waiters { waiter.resume() }
-        waiters = []
     }
 }

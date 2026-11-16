@@ -15,6 +15,7 @@
 //
 
 import Foundation
+import InitiatorShared
 import iSCSIKit
 
 extension DaemonConnection {

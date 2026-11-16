@@ -1,7 +1,9 @@
 import Foundation
 import Testing
-@testable import MockTarget
+@testable import iSCSIMockTarget
+@testable import NVMeMockTarget
 @testable import iSCSIDaemon
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 /// Tests the daemon's session registry + block-I/O engine directly (the XPC

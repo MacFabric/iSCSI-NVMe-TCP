@@ -1,8 +1,10 @@
 import Foundation
 import Testing
 @testable import iSCSIDaemon
+@testable import InitiatorShared
 @testable import iSCSIKit
-import MockTarget
+import iSCSIMockTarget
+import NVMeMockTarget
 
 /// The binding must reach every connect a session makes — the first, both
 /// NVMe queues, and each recovery reconnect — or a pin holds until the

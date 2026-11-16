@@ -1,8 +1,10 @@
 import Foundation
 import Testing
 @testable import iSCSIDaemon
+import InitiatorShared
 import iSCSIKit
-import MockTarget
+import iSCSIMockTarget
+import NVMeMockTarget
 
 private actor RemovalGate {
     var entered = false

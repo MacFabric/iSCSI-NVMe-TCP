@@ -1,7 +1,9 @@
 import Foundation
 @testable import iSCSIDaemon
+@testable import InitiatorShared
 @testable import iSCSIKit
-import MockTarget
+import iSCSIMockTarget
+import NVMeMockTarget
 import NVMeKit
 
 /// Every binding a transport factory was handed, and the transports it made,
@@ -35,6 +37,8 @@ final class PathReportingTransport: ConnectionTransport, ConnectionPathReporting
 
 let spyIQN = MockTargetConfig().targetName
 let spyNQN = MockNVMeConfig().subsystemNQN
+/// A fixed host identity, so NVMe logins in these tests present a stable NQN.
+let testHost = NVMeHostIdentity(uuid: UUID(uuidString: "6BA7B810-9DAD-11D1-80B4-00C04FD430C8")!)
 
 /// A daemon whose factory logs every binding and reports `path`: iSCSI
 /// MockTarget on 3260 (offering `spyIQN` to discovery), the NVMe mock on 4420.

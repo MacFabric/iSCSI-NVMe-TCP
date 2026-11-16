@@ -33,6 +33,7 @@
 
 import Foundation
 import SwiftUI
+import InitiatorShared
 import iSCSIKit
 
 @MainActor

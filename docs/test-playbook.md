@@ -2,6 +2,14 @@
 
 Four layers, from pure logic up to a mounted disk under fault injection.
 
+**Since 2026-11-15 the protocol engines are packages of their own**:
+[FabricKit](https://github.com/MacFabric/FabricKit),
+[iSCSIKit](https://github.com/MacFabric/iSCSIKit) and
+[NVMeKit](https://github.com/MacFabric/NVMeKit). Layers 1 and 2 for the
+engines, and the fuzz harnesses, run there; the test names below are theirs.
+This repository's `swift test` runs `InitiatorSharedTests`, `iscsictlTests`
+and the daemon, volume and XPC suites in `IntegrationTests`.
+
 ## Layer 1 — unit (`iSCSIKitTests` and `NVMeKitTests`, runs anywhere)
 
 - PDU golden byte vectors + encode/decode round-trips for every PDU type.
@@ -17,7 +25,7 @@ Four layers, from pure logic up to a mounted disk under fault injection.
   StatSN regression, C-bit continuation both directions, TSIH rules.
 - Serial (RFC 1982) arithmetic incl. wraparound.
 
-Run: `swift test --filter iSCSIKitTests`
+Run, in iSCSIKit: `swift test --filter iSCSIKitTests`
 
 ## Layer 2 — protocol integration vs scriptable MockTarget (43 tests)
 
@@ -313,6 +321,10 @@ kernel until the thaw instead (seen on 53.5 and 53.7), which the bounded child
 process timeout cannot help with. Simulator only, not yet a NAS.
 
 ## Fuzzing
+
+Now in each engine's repository: iSCSIKit's `scripts/fuzz.sh` builds
+`iscsi-pdu-fuzz`, NVMeKit's builds `nvme-pdu-fuzz`. Until the split one
+harness covered both, as described here.
 
 `scripts/fuzz.sh [seconds]` builds `pdu-fuzz` with AddressSanitizer and runs a
 deterministic structure-aware mutation engine over the PDU decoder, login

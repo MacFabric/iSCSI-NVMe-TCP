@@ -1,4 +1,5 @@
 import Foundation
+import InitiatorShared
 import iSCSIKit
 
 /// Translate the stable error code at the GUI boundary. The root daemon and

@@ -28,6 +28,7 @@
 
 import FSKit
 import Foundation
+import InitiatorShared
 import iSCSIKit
 import iSCSIVolume
 import os

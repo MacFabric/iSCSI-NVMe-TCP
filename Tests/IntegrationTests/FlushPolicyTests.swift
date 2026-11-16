@@ -12,8 +12,10 @@
 
 import Foundation
 import Testing
-@testable import MockTarget
+@testable import iSCSIMockTarget
+@testable import NVMeMockTarget
 @testable import iSCSIDaemon
+@testable import InitiatorShared
 @testable import iSCSIKit
 
 @Suite("Integration: flush policy", .timeLimit(.minutes(1)))

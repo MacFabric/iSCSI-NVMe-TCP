@@ -43,6 +43,7 @@
 import AppKit
 import Foundation
 import ServiceManagement
+import InitiatorShared
 import iSCSIKit
 
 @MainActor

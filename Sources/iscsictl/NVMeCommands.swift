@@ -2,6 +2,7 @@ import ArgumentParser
 import Foundation
 import NVMeKit
 import iSCSIDaemon
+import InitiatorShared
 import iSCSIKit
 
 // iscsictl nvme — the NVMe/TCP one-shots, mirroring discover / verify /
@@ -89,7 +90,10 @@ struct NVMeOptions: ParsableArguments {
         }
         guard let level = effectiveLevel else { return tcp }
         writeLog("Connected to \(host):\(port) over TCP")
-        return NVMeTracingTransport(tcp, label: host, level: level == .debug ? .debug : .useful, sink: writeLog)
+        // A refused Connect reads as what to change on the NAS, the way the
+        // app words it, rather than as bare status codes.
+        return NVMeTracingTransport(tcp, label: host, level: level == .debug ? .debug : .useful, sink: writeLog,
+                                    describeFailure: { ISCSIError.nsError(from: $0).localizedDescription })
         #else
         throw ValidationError("Network.framework unavailable on this platform")
         #endif

@@ -3,6 +3,7 @@ import Darwin
 import Foundation
 import os
 import NVMeKit
+import InitiatorShared
 import iSCSIKit
 
 struct NVMeNamespaceOptions: ParsableArguments {

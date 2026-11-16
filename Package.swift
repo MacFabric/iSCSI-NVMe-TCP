@@ -1,21 +1,28 @@
 // swift-tools-version: 6.0
 import PackageDescription
 
+// The protocol engines and the layer under them, each its own package.
+let iSCSIKit: Target.Dependency = .product(name: "iSCSIKit", package: "iSCSIKit")
+let NVMeKit: Target.Dependency = .product(name: "NVMeKit", package: "NVMeKit")
+let iSCSIMockTarget: Target.Dependency = .product(name: "iSCSIMockTarget", package: "iSCSIKit")
+let NVMeMockTarget: Target.Dependency = .product(name: "NVMeMockTarget", package: "NVMeKit")
+
 let package = Package(
     name: "iSCSI",
     platforms: [.macOS(.v15)],
     // The Xcode targets (iSCSIFSExtension, and anything else that links shared
-    // protocol types) can only consume iSCSIKit if it is a *product*; as a bare
-    // target it resolves to "Missing package product 'iSCSIKit'".
+    // types) can only consume a target if it is a *product*; as a bare target
+    // it resolves to "Missing package product". The protocol engines are
+    // products of their own packages, which apps/project.yml names directly.
     products: [
-        .library(name: "iSCSIKit", targets: ["iSCSIKit"]),
+        // This app's own shared code: the XPC contract and models, the error
+        // domain, mount and attach helpers, auto-attach, the read cache.
+        .library(name: "InitiatorShared", targets: ["InitiatorShared"]),
         // Same reason, for the Xcode `iscsid` target: the daemon executable is
         // built and signed by Xcode now, so that notarization covers it, and an
         // Xcode target can only link a package *product*. Named ...Kit to keep
         // it distinguishable from the `iscsid` executable that consumes it.
         .library(name: "iSCSIDaemonKit", targets: ["iSCSIDaemon"]),
-        // For the Xcode `iscsictl` target, which imports it directly.
-        .library(name: "NVMeKit", targets: ["NVMeKit"]),
         // The FSKit extension's data path, minus the FSKit. Split out of
         // iSCSIFSExtension.swift so `swift test` can reach it: read-modify-write,
         // the chunk cache wiring, the ioLock and every XPC call the volume makes
@@ -25,58 +32,46 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.5.0"),
+        // The protocol engines. Up to the next minor, because before 1.0 a
+        // minor release may break API; Package.resolved pins the exact
+        // version, and apps/project.yml must name the same one (CLAUDE.md).
+        .package(url: "https://github.com/MacFabric/iSCSIKit", .upToNextMinor(from: "0.1.0")),
+        .package(url: "https://github.com/MacFabric/NVMeKit", .upToNextMinor(from: "0.1.0")),
     ],
     targets: [
-        // CRC32C via the hardware instruction (arm64 / SSE4.2), with a
-        // slice-by-8 fallback. C because Swift exposes no way to emit the
-        // CRC32C instruction, and the digest covers every byte on the wire.
-        .target(name: "CCRC32C"),
-        // Pure protocol logic: PDU codec, negotiation, auth, digests, session engine.
-        // No sockets, no side effects — everything here is unit-testable and fuzzable.
+        // Everything the app, the daemon, the FSKit extension and iscsictl
+        // share that is not protocol: no FSKit and no XPC connection of its
+        // own, so `swift test` reaches all of it.
         .target(
-            name: "iSCSIKit",
-            dependencies: ["CCRC32C"],
-            swiftSettings: [.swiftLanguageMode(.v6)]
-        ),
-        // NVMe/TCP initiator engine, a sibling of iSCSIKit: PDU codec, capsules,
-        // controller/queue actors, block device. Depends on iSCSIKit for the
-        // transport, CRC32C, deadline, session policy and BlockDeviceBackend
-        // seam — nothing iSCSI-specific — so no shared file had to move.
-        .target(
-            name: "NVMeKit",
-            dependencies: ["iSCSIKit"],
-            swiftSettings: [.swiftLanguageMode(.v6)]
-        ),
-        // Scriptable iSCSI target used by integration tests (and runnable standalone).
-        .target(
-            name: "MockTarget",
-            dependencies: ["iSCSIKit", "NVMeKit"],
+            name: "InitiatorShared",
+            dependencies: [iSCSIKit, NVMeKit],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         // Daemon core as a library so it can be unit-tested; the executable is
         // a thin XPC/launchd launcher on top.
         .target(
             name: "iSCSIDaemon",
-            dependencies: ["iSCSIKit", "NVMeKit"],
+            dependencies: ["InitiatorShared", iSCSIKit, NVMeKit],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         // No FSKit dependency, deliberately and verifiably: the extension keeps
         // everything that conforms to FSKit and imports this for the rest.
         .target(
             name: "iSCSIVolume",
-            dependencies: ["iSCSIKit"],
+            dependencies: ["InitiatorShared", iSCSIKit],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         .executableTarget(
             name: "iscsid",
-            dependencies: ["iSCSIKit", "iSCSIDaemon"],
+            dependencies: ["InitiatorShared", iSCSIKit, "iSCSIDaemon"],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         .executableTarget(
             name: "iscsictl",
             dependencies: [
-                "iSCSIKit",
-                "NVMeKit",
+                "InitiatorShared",
+                iSCSIKit,
+                NVMeKit,
                 // dext-attach drives DaemonCore + DextBridge directly.
                 "iSCSIDaemon",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
@@ -89,43 +84,39 @@ let package = Package(
                 .define("ISCSICTL_DESTRUCTIVE"),
             ]
         ),
-        // Local iSCSI target: loopback benchmarking without the transport
-        // ceiling, plus faults (drop / corrupt / stall / target power loss)
-        // that a real NAS cannot be asked to perform on demand.
+        // Local iSCSI and NVMe/TCP target: loopback benchmarking without the
+        // transport ceiling, plus faults (drop / corrupt / stall / target
+        // power loss) that a real NAS cannot be asked to perform on demand.
         .executableTarget(
             name: "iscsi-target-sim",
             dependencies: [
-                "iSCSIKit",
-                "MockTarget",
+                iSCSIKit,
+                NVMeKit,
+                iSCSIMockTarget,
+                NVMeMockTarget,
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
-        // Fuzz harness: built normally it's a regression-replay tool;
-        // scripts/fuzz.sh rebuilds it with -sanitize=fuzzer,address.
-        .executableTarget(
-            name: "pdu-fuzz",
-            dependencies: ["iSCSIKit", "NVMeKit"],
-            swiftSettings: [.swiftLanguageMode(.v6)]
-        ),
         .testTarget(
             name: "iscsictlTests",
-            dependencies: ["iscsictl", "iSCSIKit"],
+            dependencies: ["iscsictl", "InitiatorShared", iSCSIKit],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         .testTarget(
-            name: "iSCSIKitTests",
-            dependencies: ["iSCSIKit"],
+            name: "InitiatorSharedTests",
+            dependencies: ["InitiatorShared"],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
-        .testTarget(
-            name: "NVMeKitTests",
-            dependencies: ["NVMeKit"],
-            swiftSettings: [.swiftLanguageMode(.v6)]
-        ),
+        // The daemon, the volume data path and the XPC service against mock
+        // targets. The protocol engines' own integration suites live in their
+        // packages.
         .testTarget(
             name: "IntegrationTests",
-            dependencies: ["iSCSIKit", "NVMeKit", "MockTarget", "iSCSIDaemon", "iSCSIVolume"],
+            dependencies: [
+                "InitiatorShared", iSCSIKit, NVMeKit, iSCSIMockTarget, NVMeMockTarget,
+                "iSCSIDaemon", "iSCSIVolume",
+            ],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
     ]
