@@ -64,7 +64,7 @@ same-named build phases (two "Embed Dependencies" copy-files phases, one per
 embed destination) by Swift's per-process-randomized `Dictionary` iteration,
 so an unmodified `project.yml` can regenerate into a spuriously different
 `.pbxproj` — and CI, which does set the env var, uses it as its baseline.
-CI also pins xcodegen itself (2.46.0, in `scripts/install-build-tools.sh`,
+CI also pins xcodegen itself (2.47.0, in `scripts/install-build-tools.sh`,
 which the release job uses for `create-dmg` too); regenerate with that
 version, because a different xcodegen can rewrite the file just as well.
 
@@ -86,7 +86,7 @@ extension alone, for a SIP-off machine.
 The app builds against the macOS 27 SDK with a macOS 26.0 deployment target,
 so it still installs on 26. Anything newer than 26 must be availability-gated,
 which the compiler enforces against this SDK. CI (`ci.yml`, `release.yml`)
-runs on GitHub's `xcode-27` image with `DEVELOPER_DIR` pinned to Xcode 27.1,
+runs on GitHub's `xcode-27` image with `DEVELOPER_DIR` pinned to Xcode 27.2,
 and `scripts/release.sh` refuses any other SDK version. `FSKitSettingsLink`
 still reaches `FSClient.openFileSystemExtensionsSettings()` by selector, which
 dates from the 26-SDK build and is no longer required. Nothing in CI runs on

@@ -315,9 +315,16 @@ targets:
 # It can never be part of a Developer ID export until Apple grants the DriverKit
 # family entitlements, so keeping it in its own scheme is what stops an
 # accidental `xcodebuild -scheme iSCSIApp` from dragging it into a release.
+#
+# Both build with each target's own architecture settings ("Use Target
+# Settings"). XcodeGen 2.47 made "Match Run Destination" the default, which
+# overrides ARCHS from the scheme: that would build the dext's slices from
+# the destination instead of its required arm64e, and change what the
+# release archive holds with nothing in project.yml saying so.
 schemes:
   iSCSI Initiator:
     build:
+      buildArchitectures: useTargetSettings
       targets:
         iSCSIApp: all
     run:
@@ -333,6 +340,7 @@ schemes:
 
   iSCSIDext-dev:
     build:
+      buildArchitectures: useTargetSettings
       targets:
         iSCSIDext: all
     run:
