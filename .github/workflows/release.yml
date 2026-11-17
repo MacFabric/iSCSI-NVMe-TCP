@@ -62,11 +62,11 @@ jobs:
     # Two notary round trips, each usually a few minutes and occasionally much
     # longer when Apple is busy.
     timeout-minutes: 90
-    # Xcode 27.1 and its macOS 27.0 SDK, pinned rather than taken from the
+    # Xcode 27.2 and its macOS 27.2 SDK, pinned rather than taken from the
     # image default, which moves between image releases. scripts/release.sh
     # refuses any SDK but 27.x, so a wrong toolchain stops the release early.
     env:
-      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
 
     steps:
       # Full history: the appcast commit at the end pushes to main from what is

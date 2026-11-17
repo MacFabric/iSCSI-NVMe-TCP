@@ -13,13 +13,13 @@ concurrency:
 permissions:
   contents: read
 
-# One pinned toolchain for every job: Xcode 27.1 and its macOS 27.0 SDK, on
+# One pinned toolchain for every job: Xcode 27.2 and its macOS 27.2 SDK, on
 # GitHub's Xcode 27 image (`xcode-27`, macOS 27, Apple silicon). Pinned rather
-# than taken from the image default, which moves between image releases (that
-# image also carries 27.0 and a 27.2 release candidate). It is the Xcode the
-# dev host builds with, so CI and local builds agree.
+# than taken from the image default, which moves between image releases (the
+# image's default is still 27.1, and it carries other versions besides). It is
+# the Xcode the dev host builds with, so CI and local builds agree.
 env:
-  DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+  DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
 
 jobs:
   package:

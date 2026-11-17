@@ -18,9 +18,9 @@
 
 set -euo pipefail
 
-XCODEGEN_VERSION=2.46.0
+XCODEGEN_VERSION=2.47.0
 # GitHub's own sha256 digest for the release asset `xcodegen.zip`.
-XCODEGEN_SHA256=4d9e34b62172d645eed6457cac13fc222569974098ef4ee9c3368bedf0196806
+XCODEGEN_SHA256=6ef12a3ef5327c2c713397f46d9160550f8b1cdc5c925cd884d65c77c9f696cd
 CREATE_DMG_TAG=v1.3.0
 # The commit the tag names; a tag can be moved, a commit hash cannot.
 CREATE_DMG_COMMIT=a2b71d0fda6d0df2a86dc7f67082d4d73e84c59f

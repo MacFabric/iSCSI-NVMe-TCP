@@ -90,7 +90,7 @@ echo "  version                $VERSION"
 
 # The app is built against the macOS 27 SDK, with a 26.0 deployment target so
 # it still installs on 26; the compiler enforces that anything newer than 26 is
-# availability-gated. CI's jobs and release.yml pin Xcode 27.1 on the xcode-27
+# availability-gated. CI's jobs and release.yml pin Xcode 27.2 on the xcode-27
 # image. The check is not new: it held the build at the 26 SDK before, after a
 # Mac with two Xcodes side by side quietly shipped a DMG built against whichever
 # SDK xcode-select happened to point at, differing from what CI had checked.
@@ -132,7 +132,7 @@ case "$SDK_VERSION" in
     *)
         die "this builds against the macOS 27 SDK, and ${DEVELOPER_DIR:-$(xcode-select -p)} provides
 ${SDK_VERSION:-none}. CLAUDE.md states the 27-SDK rule and CI builds with Xcode
-27.1, so building against another SDK makes the local artifact differ from what
+27.2, so building against another SDK makes the local artifact differ from what
 CI verified. Point DEVELOPER_DIR at an Xcode carrying a macOS 27 SDK:
 
     DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer scripts/release.sh"
