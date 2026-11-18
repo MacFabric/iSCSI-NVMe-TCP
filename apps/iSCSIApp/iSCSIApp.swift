@@ -114,20 +114,34 @@ struct MainWindow: View {
         }
     }
 
-    /// Land on Setup when there is something to do there.
+    /// The list is known to be empty: read, and nothing in it. Not before the
+    /// first read, when an empty list means only "not asked yet", or the
+    /// sidebar would reorder under the pointer once the answer came in.
+    private var hasNoTargets: Bool { model.hasReadTargets && model.targets.isEmpty }
+
+    /// Discover leads while there is nothing on Targets: it is how most
+    /// people add their first target, and an empty list above it is not
+    /// where to start. Targets takes the top back with its first entry.
+    private var sections: [Section] {
+        hasNoTargets ? [.discover, .targets, .sessions, .setup] : Section.allCases
+    }
+
+    /// Land on Setup when there is something to do there, else on the first
+    /// item in the sidebar.
     ///
     /// Targets is the right home once everything works, but on a fresh install
     /// it is an empty list with a disabled Add button and nothing saying that
     /// the work is one screen away. `!isReady` covers first launch, since a new
     /// install always has an unregistered daemon.
     ///
-    /// Not "no targets yet": once setup is green, the empty Targets screen
-    /// explains itself and has the button you want, whereas an all-green Setup
-    /// screen would be a dead end.
+    /// With setup green and no targets, that is Discover, which leads the
+    /// sidebar then. Setup is not: an all-green Setup screen would be a dead
+    /// end.
     private func chooseLandingSection() {
         guard !hasChosenLanding else { return }
         hasChosenLanding = true
         if !model.isReady { section = .setup }
+        else if hasNoTargets { section = .discover }
     }
 
     private func isWorking(_ item: Section) -> Bool {
@@ -140,7 +154,7 @@ struct MainWindow: View {
 
     var body: some View {
         NavigationSplitView {
-            List(Section.allCases, selection: $section) { item in
+            List(sections, selection: $section) { item in
                 NavigationLink(value: item) {
                     // Setup is the only screen that can be *wrong* rather
                     // than merely empty, so it says so from the sidebar
