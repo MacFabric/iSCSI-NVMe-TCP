@@ -20,16 +20,8 @@ else turns the LUN (or namespace) into a block device. Two things follow from th
 ### Swift package — protocol core, daemon, CLIs
 
 ```sh
-swift build
-swift test                                # all four test targets
-swift test --filter iSCSIKitTests         # one target
-swift test --filter Digest                # regex over suite and test names
-swift test --filter NVMe                  # everything NVMe/TCP, unit and integration
 swift test --no-parallel                  # what CI runs
 ```
-
-Tests are swift-testing (`@Test` / `#expect`), not XCTest. Every target is in
-Swift 6 language mode.
 
 **CI runs `--no-parallel` deliberately.** Several tests bound real durations —
 `withDeadline` asserts a 100 ms deadline has fired 2 s later, the flush-policy
