@@ -417,16 +417,90 @@ extension logs no write or flush of a second or more and its longest write is
 about half a second. The time is spent above the extension, on the default
 `hdiutil` attach. Not explained.
 
+### The rest of the list (2026-11-22, later)
+
+Everything the first pass left alone, bar one item. In the kits these are on
+branch `perf/read-path`, not released; this repository's half needs them.
+
+- **CRC32C runs three instruction chains at once**, folded with PMULL. The
+  instruction has a three-cycle latency, so one chain used a third of the
+  core. 4 KiB 7.5 → 19.6 GB/s, 64 KiB 7.1 → 21.3, 1 MiB 6.5 → 16.0; a
+  48-byte header is unchanged. It matters more than this document used to
+  say: digests are off for iSCSI on the NAS, but the daemon asks for them on
+  every NVMe/TCP controller and TrueNAS grants them.
+- **A byte read is copied once, not four times.** The deframers keep
+  received chunks as they came and hand a PDU over in steps: the header
+  first, then the data moved from those chunks straight into the buffer of
+  the read it answers. That buffer is one allocation for the whole read,
+  shared by the commands it is split into, not zeroed first, and returned as
+  `Data` without a copy.
+- **`NWConnection.send` copies a `Data` it is given**, whole, before it
+  returns: 256 MiB sent to a peer that was not reading grew the process by
+  256 MiB at once. Parts of 16 KiB and more now go as dispatch data that
+  refers to the caller's bytes, which grew it by nothing.
+- **Deadlines share one sleeping task.** `withDeadline` made a task per
+  command to sleep through the timeout. 5.2 → 2.7 µs per call; what is left
+  is the task the operation runs in, which is what lets a deadline hold over
+  work that ignores cancellation.
+- **Big- and little-endian fields are read in one load**, 12 → 6 ns for a
+  32-bit field, still trapping on an offset outside the buffer.
+- **A disk-tier lookup over several chunks reads and decrypts them at once.**
+- **NVMe/TCP can open several I/O queues** (`NVMeControllerConfig.
+  ioQueueCount`, `iscsictl nvme … --io-queues`, `NVME_IO_QUEUES` for the
+  daemon). One is still the default.
+
+**What a read costs the initiator.** Loopback, `iscsictl` on the 0.1.1 kits
+against this work, alternated, three runs each of 1 GiB; CPU seconds (user
+plus system) of the `iscsictl` process, which is far steadier here than
+throughput:
+
+| | 0.1.1 | now | |
+|---|---|---|---|
+| iSCSI read | 0.90 / 1.05 / 0.98 | 0.58 / 0.63 / 0.79 | **−36%** |
+| iSCSI read, digests | 1.03 / 1.16 / 1.17 | 0.60 / 0.63 / 0.71 | **−46%** |
+| NVMe/TCP read, digests | 1.40 / 1.29 / 1.39 | 0.84 / 0.91 / 0.83 | **−40%** |
+| NVMe/TCP read | 1.24 / 1.41 / 1.44 | 0.80 / 0.91 / 0.85 | **−40%** |
+| iSCSI write (six runs, mean) | 1.01 | 0.95 | −6% |
+| NVMe/TCP write (six runs, mean) | 1.24 | 1.21 | −2% |
+
+Peak memory of the reading process fell from 22–25 MiB to 15–17. Writes are
+two thirds system time, the kernel's own copy into the socket, which nothing
+here touches. Throughput on the same runs moved the same way for reads
+(iSCSI with digests: median 602 → 814 MB/s over five runs) but the ranges
+overlap for most shapes: this machine was running two VMs, and the simulator
+is the slower end of the pipe.
+
+**Several I/O queues, loopback.** Median of four runs, MB/s:
+
+| | 1 queue | 2 | 4 |
+|---|---|---|---|
+| read, 1 MiB, depth 4 | 816 | 980 | 1045 |
+| read, 64 KiB, depth 8 | 565 | 533 | 558 |
+| read, 4 KiB, depth 32 | 71 | 80 | 81 |
+| write, 1 MiB, depth 4 | 468 | 608 | 611 |
+| write, 4 KiB, depth 32 | 78 | 89 | 80 |
+
+A fifth to a third more on megabyte transfers, a tenth on 4 KiB, nothing at
+64 KiB, and little past two. The simulator's disk is one actor, so this
+understates a target that serves queues independently and says nothing about
+one whose readahead dislikes a sequential read arriving on several
+connections. **Not measured on the NAS**, which was in use; that run decides
+whether the default should move.
+
+**Checked on the NAS, lightly.** From VM 26, read-only: four 8 MiB ranges of
+`name-testing` holding real data (58 to 96% non-zero) read with the 0.1.1
+engine and with this one, on one, two, three and four queues (TrueNAS
+granted four), with CRC32C digests and without, in 64 KiB, 256 KiB and 1 MiB
+commands, up to eight requests at once. Every SHA-256 matched. Both fuzz
+harnesses now take each input through the stepwise deframers as well and
+require them to agree with `next()`: 1.6 and 1.2 million inputs under ASan,
+no crashes.
+
 ### Left alone
 
-- **CRC32C** runs one `crc32cd` chain. Three interleaved streams measured
-  7.2 → 21.1 GB/s on this machine before the folding step a real
-  implementation needs. Worth doing when digests are in use.
-- **Read copies.** Each byte read is copied four times between the socket and
-  the caller. Loopback reads are not bound by it.
-- **One NVMe/TCP I/O queue**, where Linux opens one per CPU: the lever for
-  small-block IOPS.
-- **Two tasks per command in `withDeadline`**, and waking every CmdSN-window
-  waiter on each window update. Waking only as many as the window opened is
-  not a safe trade at these depths: a woken waiter that turns out to be
-  cancelled would strand the ones behind it.
+- **Waking every CmdSN-window waiter on each window update.** Waking only as
+  many as the window opened is not a safe trade at these depths: a woken
+  waiter that turns out to be cancelled would strand the ones behind it.
+- **The task `withDeadline` runs the operation in**, and the task per send
+  that keeps iSCSI's PDUs in CmdSN order. Both are what make a stuck
+  operation survivable.
