@@ -548,6 +548,72 @@ harnesses now take each input through the stepwise deframers as well and
 require them to agree with `next()`: 1.6 and 1.2 million inputs under ASan,
 no crashes.
 
+### The same suite with four cores, on both VMs (2026-11-22, afternoon)
+
+Both test VMs were raised from two cores to four and run one at a time:
+VM 26 (26.7.3) and VM 27 (27.2.1), build 57.4, `name-testing` write-through
+on both. VM 27 had it saved with a 5 s periodic flush until this run, which
+is why its earlier numbers are not in this table.
+
+Mixed load, after a throwaway run, MiB/s:
+
+| phase | VM 26, 2 cores | VM 26, 4 cores | VM 27, 4 cores |
+|---|---|---|---|
+| write alone | 50.2 / 41.1 | 39.7 / 34.2 | 43.0 / 46.1 |
+| read alone | 107.0 / 105.1 | 98.4 / 89.4 | 80.2 / 132.6 |
+| read 3 files while writing 3 | 69.0 / 68.5 | 57.9 / 63.1 | 55.3 / 72.8 |
+| read 6 files | 101.6 / 96.9 | 100.8 / 98.9 | 137.9 / 144.1 |
+
+Every read verified. Two more cores bought nothing on VM 26, and its
+write-alone figure moved from 34 to 50 across four runs of one build an hour
+apart. So the "57.4 writes faster than 57.1" reading above is withdrawn:
+that spread is the NAS, and it is wider than the difference it was read
+from.
+
+Raw reads, 0.1.1 engine against 0.1.2, one queue, median of three alternated
+runs, MB/s with the tool's CPU seconds:
+
+| | VM 26: 0.1.1 | 0.1.2 | VM 27: 0.1.1 | 0.1.2 |
+|---|---|---|---|---|
+| 1 MiB, depth 1 | 154, 2.47 s | 161, 2.17 s | 320, 2.29 s | 340, 1.73 s |
+| 1 MiB, depth 4 | 222, 2.99 s | 229, 1.97 s | 505, 2.10 s | 484, 1.70 s |
+| 64 KiB, depth 8 | 155, 2.41 s | 185, 1.52 s | 383, 1.82 s | 402, 1.33 s |
+| 4 KiB, depth 32 | 39, 1.85 s | 47, 1.16 s | 94, 1.54 s | 125, 1.17 s |
+
+(VM 27's 64 KiB row is eight alternated runs: the first three had the new
+engine 10% behind, and the longer run did not.) Throughput at a megabyte is
+the link, on both. **Small reads are where the new engine is faster on a
+real target**: 4 KiB at depth 32 is 20% up on VM 26 and 33% up on VM 27,
+with the ranges apart on VM 27 (87 to 101 against 122 to 131). CPU for the
+same work is 12 to 37% lower everywhere. The same eight runs included a
+SwiftPM build of the 0.1.2 engine beside Xcode's from the bundle: 393 MB/s
+and 1.37 s against 402 and 1.33, so the build system is not what the tables
+above are measuring.
+
+I/O queues with four cores, median of four alternated runs, MB/s:
+
+| | VM 26: 1 queue | 2 | 4 | VM 27: 1 queue | 2 | 4 |
+|---|---|---|---|---|---|---|
+| 1 MiB, depth 1 | 173 | 158 | 171 | 333 | 327 | 338 |
+| 1 MiB, depth 4 | 226 | 221 | 232 | 490 | 480 | 472 |
+| 64 KiB, depth 8 | 173 | 165 | 175 | 321 | 351 | 318 |
+| 4 KiB, depth 32 | 61 | 52 | 55 | 128 | 102 | 124 |
+
+Still nothing, with the cores to use them and on the faster of the two
+links, and each extra queue costs CPU (VM 27, 1 MiB at depth 4: 1.75, 2.19
+and 2.55 s). One queue stays the default, and against this NAS there is no
+case for the knob.
+
+Two things about method that cost time here. A benchmark started with
+`nohup` over ssh loses the local network when the session closes: every
+connect from it then times out, which looked like a dead target. File-level
+load survives being detached; anything that opens a socket has to run in a
+live session. And a mixed-load run on VM 27, while it still had the 5 s
+flush, slowed to 1 to 2 s per megabyte written for six minutes, with the
+daemon idle and a second connection from the old engine reading at 31 MB/s;
+both recovered when the load was stopped. Not explained, and not seen again
+once the target was write-through.
+
 ### Left alone
 
 - **Waking every CmdSN-window waiter on each window update.** Waking only as
