@@ -1426,60 +1426,97 @@ one locked volume):
 
 `iscsictl nvme attach` does no unlocking: it is the app's code alone.
 
-## 21. One write in a run waits 10 to 19 s above the extension, on `hdiutil` (2026-11-22)
+## 21. One writer starved for 10 to 26 s inside APFS, behind launchd's periodic sync (2026-11-22)
 
-A mixed load on VM 26 (26.7.3), `name-testing` over NVMe/TCP, default
-`hdiutil` attach: three threads each writing a 512 MiB file in 1 MiB
-`write()` calls with `F_NOCACHE`, an `F_FULLFSYNC` every 64 MiB, alone and
-then with three readers beside them. In most runs one `write()` takes 10 to
-19 s. Everything else in the same run stays near a second or under.
+Under three concurrent writers on an attached volume, one `write()` of 1 MiB
+sometimes takes 10 to 26 s while the other two writers carry on. Seen all
+morning on both VMs and on builds 57.1, 57.3 and 57.4, so it is not this
+work; then investigated on VM 27 (27.2.1, 57.4, `name-testing`, `hdiutil`).
 
-**Seen** in five of six runs, on both builds tried:
+**What it is.** A spindump taken while a write had been stuck for four
+seconds (it ran to 16.8 s) shows:
 
-- 57.1 (main before the 2026-11-22 data-path work): 10.7, 17.5 and 16.3 s;
-- 57.3 (that work, on the 0.1.1 kits): 16.2, 19.4, 16.3, 17.5 and 10.6 s.
+- the stuck writer in `apfs_vnop_write` → `prepare_write_and_lock` →
+  `apfs_io_lock_shared_to_exclusive`, waiting to upgrade a lock on its own
+  file, for every sample;
+- at the same time launchd's `bgioq` thread in `sync(2)` →
+  `apfs_vfsop_sync` → `apfs_sync_callback` → `apfs_fsync_internal_ext` →
+  `cluster_push_err` → `vnode_waitforwrites`, flushing a file and waiting
+  for its writes to drain, for every sample;
+- the other two writers working: each completed five write-and-fsync cycles
+  during the stall.
 
-So it is not that work, and it is not DiskImages2, which item 17 already
-knows holds requests: this is the default engine.
+So nothing below APFS is stuck. The extension, the daemon and the NAS never
+see a slow command, which is why none of them ever logged one.
 
-**What is known.**
+**What feeds it.**
 
-- It is above the extension. The extension logs any write or flush that
-  takes a second or more and logged none; its longest write in a run with a
-  16 s and a 19 s stall was 498 ms. The daemon logged no slow operation, no
-  lost connection and no recovery.
-- It lands on one writer, the third of three in every run where the output
-  names it, and once per phase at most.
-- It happens with no reads going on (the write-alone phase) as well as with
-  them.
-- The `F_FULLFSYNC`s never reached the extension as flushes: its flush count
-  did not move during a run.
-- No data is harmed. Every read in every run matched the SHA-256 of what was
-  written.
+- launchd calls `sync(2)` every 30 s (measured with `fs_usage`: 13:34:24,
+  :54, 13:35:24). Idle, it takes 10 to 30 ms. Under this load it took 3 to
+  9 s. A stall at most once per phase of the load is that cadence.
+- `write()` returns in under a millisecond and `F_FULLFSYNC` takes 1.5 to
+  12 s: the load's `F_NOCACHE` does not stop its writes being buffered (its
+  buffers are not page-aligned), so there is a backlog of tens of megabytes
+  per file for a sync to flush. `scripts/mixed-load.py` times only
+  `write()`, which is why the fsyncs never showed.
+- The `hdiutil` path is one request at a time: `diskimages-helper` has a
+  single thread taking a request from `IOHDIXHDDriveOutKernel` and doing a
+  `pwrite` on `lun0.img`. A file's flush waits its turn behind everything
+  the other writers have queued, at the 40-odd MiB/s the target commits.
 
-**Unexplained: what holds the write.** Candidates, none tested: an APFS
-transaction waiting on another thread's `F_FULLFSYNC`; `hdiutil`'s
-DiskImages driver queueing one request behind the others; the 16 s itself,
-which is steady enough to look like a timer and not like a queue draining.
+**What is not established.**
+
+- *The trigger is not under control.* In one run a background-priority
+  `sync` issued every 4 s (`taskpolicy -b /bin/sync`) coincided to within
+  tenths of a second with a stalled write five times out of seven (7.2, 3.5,
+  5.0, 9.1 and 8.1 s). In fourteen later runs, with `sync` at default or
+  background priority or left to launchd, no write took longer than 3 s,
+  although the syncs themselves took up to 9 s. So a long sync is not
+  enough: the writer also has to need the exclusive lock while the sync
+  holds it, and when that is has not been worked out.
+- *Whether the sync's priority matters.* launchd's thread has a background
+  base priority, and background I/O is throttled behind foreground I/O,
+  which would explain a sync held for 16 s. But the alternated trials above
+  showed no difference between background and default, because neither
+  stalled anything.
+- *Whether DiskImages2 avoids it.* Three runs on DiskImages2 (one with
+  background syncs, two of the original load) had no stalled write, and it
+  wrote faster (57 against 43 MiB/s) with the helper's serial queue gone.
+  But they were taken after `hdiutil` had stopped showing the stall too, so
+  they do not separate the engines.
+- *Why it stopped.* Stalls in nearly every run from 10:00 to 13:05, on fresh
+  attaches included; none from 13:10 on. The volume was re-attached in
+  between, which had not cured it earlier in the day.
+
+**It is not the NAS filling a log device.** That was a reasonable guess for
+a stall that looks related to bytes written, and it may yet explain the
+six-minute crawl recorded in `performance.md`, where the daemon itself saw
+1 to 2 s per megabyte. Here the device is answering promptly throughout.
 
 **Why it matters.** A guest's disk driver gives up sooner than this. The
 FreeBSD panic that made DiskImages2 opt-in was a 10 s disk timeout, and this
-is the engine that was the answer to it.
+is the engine that was the answer to it. A VM image on an attached volume is
+one big file with one writer, though, not three files with three: whether a
+single writer can be starved this way is the next thing to find out.
 
-**How to attack it.**
+**How to attack it next.**
 
-1. Take `F_FULLFSYNC` out of the load. If the stall goes, it is the flush
-   path, and what `hdiutil` does with a flush is the next question.
-2. One writer, then two. It has only been seen with three.
-3. Run it against `iscsi-target-sim` on the VM, which removes the NAS and
-   the network. On loopback a 16 s wait cannot be the target.
-4. While one is in progress, `sample` the process and `fs_usage -w` the
-   volume, to see which call it sits in.
-5. The same load on 27.2, on both engines.
+1. One writer, with a second process generating the competing load on other
+   files, and launchd's sync timed with `sudo fs_usage -w -f filesys
+   launchd`: does the lone writer ever stall?
+2. Page-aligned buffers, so `F_NOCACHE` writes go straight through and
+   there is no backlog for the sync to flush.
+3. The same load against `iscsi-target-sim` on the VM, where the device can
+   be made as slow or as fast as wanted (`responsedelayms`): does the stall
+   scale with how slow the disk is?
+4. Both engines, alternated in one session, now that the stall is known to
+   come and go.
 
-The load is `scripts/mixed-load.py <dir> <MiB per file> <files>`, run here as
-`mixed-load.py /Volumes/name-testing 512 3`; it prints the longest call of
-each thread and removes its own files. Numbers are in `performance.md`.
+Tools: `scripts/write-stall.py` (per-call timing, what the other writers
+did meanwhile, a capture command when a write is stuck) and
+`scripts/write-stall-mixed.py` (the same around the unchanged
+`mixed-load.py`). `sudo spindump -notarget 3 10 -file …` is the capture that
+found it; `sample` cannot see the kernel frames that matter.
 
 ## A note on method
 
