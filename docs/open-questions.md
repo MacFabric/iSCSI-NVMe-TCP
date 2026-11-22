@@ -1426,6 +1426,61 @@ one locked volume):
 
 `iscsictl nvme attach` does no unlocking: it is the app's code alone.
 
+## 21. One write in a run waits 10 to 19 s above the extension, on `hdiutil` (2026-11-22)
+
+A mixed load on VM 26 (26.7.3), `name-testing` over NVMe/TCP, default
+`hdiutil` attach: three threads each writing a 512 MiB file in 1 MiB
+`write()` calls with `F_NOCACHE`, an `F_FULLFSYNC` every 64 MiB, alone and
+then with three readers beside them. In most runs one `write()` takes 10 to
+19 s. Everything else in the same run stays near a second or under.
+
+**Seen** in five of six runs, on both builds tried:
+
+- 57.1 (main before the 2026-11-22 data-path work): 10.7, 17.5 and 16.3 s;
+- 57.3 (that work, on the 0.1.1 kits): 16.2, 19.4, 16.3, 17.5 and 10.6 s.
+
+So it is not that work, and it is not DiskImages2, which item 17 already
+knows holds requests: this is the default engine.
+
+**What is known.**
+
+- It is above the extension. The extension logs any write or flush that
+  takes a second or more and logged none; its longest write in a run with a
+  16 s and a 19 s stall was 498 ms. The daemon logged no slow operation, no
+  lost connection and no recovery.
+- It lands on one writer, the third of three in every run where the output
+  names it, and once per phase at most.
+- It happens with no reads going on (the write-alone phase) as well as with
+  them.
+- The `F_FULLFSYNC`s never reached the extension as flushes: its flush count
+  did not move during a run.
+- No data is harmed. Every read in every run matched the SHA-256 of what was
+  written.
+
+**Unexplained: what holds the write.** Candidates, none tested: an APFS
+transaction waiting on another thread's `F_FULLFSYNC`; `hdiutil`'s
+DiskImages driver queueing one request behind the others; the 16 s itself,
+which is steady enough to look like a timer and not like a queue draining.
+
+**Why it matters.** A guest's disk driver gives up sooner than this. The
+FreeBSD panic that made DiskImages2 opt-in was a 10 s disk timeout, and this
+is the engine that was the answer to it.
+
+**How to attack it.**
+
+1. Take `F_FULLFSYNC` out of the load. If the stall goes, it is the flush
+   path, and what `hdiutil` does with a flush is the next question.
+2. One writer, then two. It has only been seen with three.
+3. Run it against `iscsi-target-sim` on the VM, which removes the NAS and
+   the network. On loopback a 16 s wait cannot be the target.
+4. While one is in progress, `sample` the process and `fs_usage -w` the
+   volume, to see which call it sits in.
+5. The same load on 27.2, on both engines.
+
+The load is `scripts/mixed-load.py <dir> <MiB per file> <files>`, run here as
+`mixed-load.py /Volumes/name-testing 512 3`; it prints the longest call of
+each thread and removes its own files. Numbers are in `performance.md`.
+
 ## A note on method
 
 Four things were got wrong during this work and three had the same cause:
