@@ -391,6 +391,32 @@ which no bench here produces; that one rests on its tests until a mixed run
 against a real target says more. On the 1 GbE NAS none of this should show,
 for the reason this document opens with.
 
+### On the NAS, through the whole stack: no change, as predicted
+
+VM 26 (26.7.3), `name-testing` over NVMe/TCP, attached with `hdiutil`. A
+verified mixed load: three 512 MiB files per phase in 1 MiB calls, `F_NOCACHE`
+on reads and writes, every read checked against a SHA-256 of what was written.
+Build 57.1 is main before this work; 57.3 is this branch on the 0.1.1 kits.
+Two runs each, MiB/s:
+
+| phase | 57.1 | 57.3 |
+|---|---|---|
+| write alone, 3 streams | 36.7 / 37.2 | 37.1 / 36.8 |
+| read alone, 3 streams | 102.9 / 104.4 | 108.7 / 93.9 |
+| read 3 files while writing 3 | 60.3 / 63.6 | 63.3 / 59.7 |
+| read 6 files | 101.8 / 109.0 | 104.8 / 103.7 |
+
+Nothing moved outside run-to-run spread, and every read verified. Two earlier
+57.3 runs, taken while the NAS was busy with other work, read 10 to 25% slower
+and looked like a regression until these were taken back to back.
+
+**A write stall this load exposes, in both builds.** One `write()` of 1 MiB
+takes 10 to 19 s in most runs (57.1: 10.7, 17.5 and 16.3 s; 57.3: 16.2, 19.4,
+16.3, 17.5 and 10.6 s), always on one of three concurrent writers, while the
+extension logs no write or flush of a second or more and its longest write is
+about half a second. The time is spent above the extension, on the default
+`hdiutil` attach. Not explained.
+
 ### Left alone
 
 - **CRC32C** runs one `crc32cd` chain. Three interleaved streams measured
