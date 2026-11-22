@@ -484,8 +484,60 @@ A fifth to a third more on megabyte transfers, a tenth on 4 KiB, nothing at
 64 KiB, and little past two. The simulator's disk is one actor, so this
 understates a target that serves queues independently and says nothing about
 one whose readahead dislikes a sequential read arriving on several
-connections. **Not measured on the NAS**, which was in use; that run decides
-whether the default should move.
+connections.
+
+**Several I/O queues, on the NAS: no gain, so the default stays at one.**
+VM 26 (two cores), `iscsictl nvme read-bench` from build 57.4's bundle
+against `name-testing`, CRC32C digests on, four alternated runs; median MB/s
+and CPU seconds of the tool:
+
+| | 1 queue | 2 | 4 |
+|---|---|---|---|
+| 1 MiB, depth 1 | 219, 1.28 s | 224, 1.54 s | 218, 1.64 s |
+| 1 MiB, depth 4 | 299, 1.20 s | 325, 1.41 s | 271, 1.69 s |
+| 64 KiB, depth 8 | 229, 1.03 s | 221, 1.14 s | 206, 1.28 s |
+| 4 KiB, depth 32 | 71, 0.92 s | 66, 0.92 s | 61, 0.98 s |
+
+Two queues are inside the noise of one and cost more CPU; four are a little
+slower at every size. This rig is bound by the VM's network path at about
+300 MB/s and has two cores, so there is nothing for a second receive loop to
+unlock. A host with a faster link and more cores is where to ask again.
+
+**The same reads, 0.1.1 engine against 0.1.2, on the NAS.** Three alternated
+runs, one queue; throughput did not move (1 MiB at depth 1: 169 / 217 / 205
+against 216 / 221 / 198 MB/s), which is the link. CPU seconds for the same
+work did:
+
+| | 0.1.1 | 0.1.2 |
+|---|---|---|
+| 1 GiB in 1 MiB requests, depth 1 | 2.04 / 1.78 / 2.26 | 1.13 / 1.36 / 1.63 |
+| 1 GiB in 1 MiB requests, depth 4 | 1.89 / 1.62 / 2.15 | 1.10 / 1.47 / 1.57 |
+| 512 MiB in 64 KiB requests, depth 8 | 1.45 / 1.43 / 2.01 | 0.89 / 1.25 / 1.19 |
+| 64 MiB in 4 KiB requests, depth 8 | 1.49 / 1.56 / 2.00 | 1.14 / 1.35 / 1.06 |
+
+About a third less at a megabyte, a fifth to a quarter below. The 0.1.1
+binary is a SwiftPM build and the 0.1.2 one is Xcode's from the bundle, which
+is a difference this table cannot separate from the engines'.
+
+**Through the whole stack, build 57.4.** The mixed load of the section above
+(`scripts/mixed-load.py /Volumes/name-testing 512 3`), a throwaway run and
+then two, MiB/s:
+
+| phase | 57.1 and 57.3, earlier the same day | 57.4 |
+|---|---|---|
+| write alone | 36.7 / 37.2 / 37.1 / 36.8 | 50.2 / 41.1 (throwaway 43.4) |
+| read alone | 102.9 / 104.4 / 108.7 / 93.9 | 107.0 / 105.1 |
+| read 3 files while writing 3 | 60.3 / 63.6 / 63.3 / 59.7 | 69.0 / 68.5 |
+| read 6 files | 101.8 / 109.0 / 104.8 / 103.7 | 101.6 / 96.9 |
+
+Every read verified, no slow-I/O or recovery lines. Reads are where they
+were. Writes are 11 to 35% up and the mixed phase 8 to 15%, with every 57.4
+run above every earlier one; that would fit NVMe/TCP writes carrying a data
+digest that is now three times cheaper to compute, on a two-core VM. But the
+two columns were taken two hours apart with the NAS busy in between, and
+that kind of gap has misled this document once today already. Not claimed
+until the builds are run back to back. The write stall of item 21 in
+`open-questions.md` is still there: 11.5, 8.0, 16.4 and 16.7 s.
 
 **Checked on the NAS, lightly.** From VM 26, read-only: four 8 MiB ranges of
 `name-testing` holding real data (58 to 96% non-zero) read with the 0.1.1
