@@ -66,8 +66,11 @@ final class UnlinkedFile: ChunkFile, @unchecked Sendable {
 /// up (`beginWrite`) and takes down (`endWrite`), dropping the range at both
 /// edges, or by failing authentication.
 ///
-/// Each slot is `chunkBytes` of AES-GCM ciphertext and its 16-byte tag in a
-/// page of its own. The key lives only in this object; the nonce is the slot
+/// Each slot is `chunkBytes` of AES-GCM ciphertext. Its 16-byte tag stays in
+/// memory beside the slot's other bookkeeping: the tier is session-scoped, so
+/// a tag on disk would outlive nothing the table does not, and it cost a page
+/// per slot and a second read and write per chunk. The key lives only in this
+/// object; the nonce is the slot
 /// number and a per-tier seal counter, so it never repeats under the key; the
 /// chunk's offset and length are the additional authenticated data, so a slot
 /// read for the wrong chunk fails authentication instead of returning bytes.
@@ -100,9 +103,6 @@ public final class DiskChunkTier: @unchecked Sendable {
         }
     }
 
-    /// Bytes per slot beyond the chunk: the 16-byte GCM tag, in a page of its
-    /// own so chunk data stays page-aligned.
-    static let tagRoom = 4096
     /// Free space never handed to the tier.
     static let reserveBytes: Int64 = 10 << 30
     /// Below this, a tier is not worth its bookkeeping.
@@ -114,7 +114,6 @@ public final class DiskChunkTier: @unchecked Sendable {
 
     let chunkBytes: Int
     let slotCount: Int
-    private let stride: Int
     private let file: ChunkFile
     private let key = SymmetricKey(size: .bits256)
     private let spillQueue: DispatchQueue
@@ -122,6 +121,8 @@ public final class DiskChunkTier: @unchecked Sendable {
     private struct Slot {
         let index: Int
         let nonce: AES.GCM.Nonce
+        /// The seal's authentication tag. Never written to the file.
+        let tag: Data
         let length: Int
         /// Unique per seal: tells a reader whether its slot was reused.
         let version: UInt64
@@ -165,13 +166,12 @@ public final class DiskChunkTier: @unchecked Sendable {
         precondition(chunkBytes > 0)
         self.file = file
         self.chunkBytes = chunkBytes
-        stride = chunkBytes + Self.tagRoom
-        slotCount = max(1, budgetBytes / stride)
+        slotCount = max(1, budgetBytes / chunkBytes)
         freeSlots = Array((0 ..< slotCount).reversed())
         order = SegmentedLRU(protectedCapacity: slotCount * 4 / 5)
         self.spillQueue = spillQueue
         freeSpaceCheck = freeSpace
-        self.growthCheckSlots = max(1, growthCheckSlots ?? ((256 << 20) / (chunkBytes + Self.tagRoom)))
+        self.growthCheckSlots = max(1, growthCheckSlots ?? ((256 << 20) / chunkBytes))
         growthLimit = slotCount
     }
 
@@ -252,12 +252,12 @@ public final class DiskChunkTier: @unchecked Sendable {
         lock.unlock()
 
         let nonce = Self.nonce(slot: index, seal: seal)
+        let tag: Data
         do {
             let sealed = try AES.GCM.seal(data, using: key, nonce: nonce,
                                           authenticating: Self.aad(offset: offset, length: data.count))
-            let base = Int64(index) * Int64(stride)
-            try file.write(sealed.ciphertext, at: base)
-            try file.write(sealed.tag, at: base + Int64(chunkBytes))
+            try file.write(sealed.ciphertext, at: Int64(index) * Int64(chunkBytes))
+            tag = sealed.tag
         } catch {
             disable("write failed: \(error)")
             return
@@ -266,7 +266,7 @@ public final class DiskChunkTier: @unchecked Sendable {
         lock.lock()
         if tickets[offset] == ticket, statsStore.disabledReason == nil {
             tickets[offset] = nil
-            slots[offset] = Slot(index: index, nonce: nonce, length: data.count, version: seal)
+            slots[offset] = Slot(index: index, nonce: nonce, tag: tag, length: data.count, version: seal)
             order.insert(offset)
             statsStore.spilled += 1
         } else if statsStore.disabledReason == nil {
@@ -311,17 +311,14 @@ public final class DiskChunkTier: @unchecked Sendable {
 
         var out = Data(capacity: length)
         for (co, slot) in wanted {
-            let base = Int64(slot.index) * Int64(stride)
             let ciphertext: Data
-            let tag: Data
             do {
-                ciphertext = try file.read(at: base, count: slot.length)
-                tag = try file.read(at: base + Int64(chunkBytes), count: 16)
+                ciphertext = try file.read(at: Int64(slot.index) * Int64(chunkBytes), count: slot.length)
             } catch {
                 disable("read failed: \(error)")
                 return nil
             }
-            guard let box = try? AES.GCM.SealedBox(nonce: slot.nonce, ciphertext: ciphertext, tag: tag),
+            guard let box = try? AES.GCM.SealedBox(nonce: slot.nonce, ciphertext: ciphertext, tag: slot.tag),
                   let plain = try? AES.GCM.open(box, using: key,
                                                 authenticating: Self.aad(offset: co, length: slot.length))
             else {
@@ -423,7 +420,7 @@ public final class DiskChunkTier: @unchecked Sendable {
             return true
         }
         let free = freeSpaceCheck() ?? 0
-        let stretch = Int64(growthCheckSlots) * Int64(stride)
+        let stretch = Int64(growthCheckSlots) * Int64(chunkBytes)
         if free - stretch >= Self.reserveBytes {
             checkedSlots = next + growthCheckSlots
             return true

@@ -804,7 +804,12 @@ public final class DaemonStore: LUNStore {
                 // Read-modify-write the partial edge blocks.
                 let t = Self.now()
                 defer { daemonNanos &+= Self.now() &- t }
-                var block = try rawRead(offset: plan.alignedOffset, length: plan.alignedLength)
+                // From memory when the cache holds every byte of it: under
+                // `ioLock` each acknowledged write is already patched in, so
+                // those bytes are what the device would answer, without the
+                // round trip.
+                var block = try cache.peek(offset: plan.alignedOffset, length: plan.alignedLength)
+                    ?? rawRead(offset: plan.alignedOffset, length: plan.alignedLength)
                 block.replaceSubrange(plan.skip ..< (plan.skip + plan.count), with: payload)
                 try rawWrite(offset: plan.alignedOffset, data: block)
                 cache.didWrite(block, at: plan.alignedOffset)

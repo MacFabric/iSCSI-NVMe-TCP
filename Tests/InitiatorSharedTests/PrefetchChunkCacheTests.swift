@@ -841,3 +841,94 @@ struct PrefetchChunkCacheAdaptationTests {
         #expect(backing.syncFetches.last?.length == Self.chunk)
     }
 }
+
+@Suite("PrefetchChunkCache: patching in place and peeking")
+struct PrefetchChunkCachePatchTests {
+    static let chunk = PrefetchChunkCacheTests.chunk
+
+    /// The write's bytes arrive as a slice of a larger buffer whenever the
+    /// store had to trim them, and a slice's indices do not start at zero.
+    @Test func aWriteHandedOverAsASliceIsPatchedFromTheRightBytes() throws {
+        let backing = PrefetchChunkCacheTests.makeBacking()
+        let cache = PrefetchChunkCacheTests.makeCache(backing: backing, minStreamBytes: .max)
+        _ = try cache.read(offset: 0, length: 512)
+        let buffer = Data((0 ..< 1024).map { UInt8($0 & 0xFF) })
+        let slice = buffer[300 ..< 364]
+        cache.willWrite(offset: 100, length: slice.count)
+        cache.didWrite(slice, at: 100)
+        let data = try cache.read(offset: 0, length: 512)
+        #expect(backing.syncCount == 1)
+        #expect(data.subdata(in: 100 ..< 164) == Data(slice))
+        #expect(data.subdata(in: 0 ..< 100) == FakeBacking.pattern(offset: 0, length: 100))
+        #expect(data.subdata(in: 164 ..< 512) == FakeBacking.pattern(offset: 164, length: 512 - 164))
+    }
+
+    /// The patch mutates the cached bytes where they are. A read answered
+    /// before the write holds those same bytes and must keep what it was given.
+    @Test func bytesAlreadyHandedToAReaderSurviveALaterPatch() throws {
+        let backing = PrefetchChunkCacheTests.makeBacking()
+        let cache = PrefetchChunkCacheTests.makeCache(backing: backing, minStreamBytes: .max)
+        _ = try cache.read(offset: 0, length: 512)
+        let whole = try #require(cache.peek(offset: 0, length: Self.chunk))
+        cache.willWrite(offset: 0, length: 256)
+        cache.didWrite(Data(repeating: 0xEE, count: 256), at: 0)
+        #expect(whole == FakeBacking.pattern(offset: 0, length: Self.chunk))
+        #expect(try cache.read(offset: 0, length: 256) == Data(repeating: 0xEE, count: 256))
+    }
+
+    @Test func aWriteCoveringManyChunksPatchesEachFromItsOwnPart() throws {
+        let backing = PrefetchChunkCacheTests.makeBacking()
+        let cache = PrefetchChunkCacheTests.makeCache(backing: backing, minStreamBytes: .max)
+        _ = try cache.read(offset: 0, length: 3 * Self.chunk)
+        let written = Data((0 ..< 2 * Self.chunk).map { UInt8(($0 / 7) & 0xFF) })
+        let start = UInt64(Self.chunk / 2)
+        cache.willWrite(offset: start, length: written.count)
+        cache.didWrite(written, at: start)
+        let fetches = backing.syncCount
+        #expect(try cache.read(offset: start, length: written.count) == written)
+        #expect(try cache.read(offset: 0, length: Self.chunk / 2)
+                == FakeBacking.pattern(offset: 0, length: Self.chunk / 2))
+        #expect(backing.syncCount == fetches)
+    }
+
+    @Test func peekAnswersOnlyFromMemoryAndCountsNothing() throws {
+        let backing = PrefetchChunkCacheTests.makeBacking()
+        let cache = PrefetchChunkCacheTests.makeCache(backing: backing, minStreamBytes: .max)
+        #expect(cache.peek(offset: 0, length: 512) == nil)
+        #expect(backing.syncCount == 0, "a peek never fetches")
+        _ = try cache.read(offset: 0, length: 512)
+        let before = cache.stats
+        #expect(cache.peek(offset: 64, length: 256) == FakeBacking.pattern(offset: 64, length: 256))
+        // Spans into a chunk that is not cached: all or nothing.
+        #expect(cache.peek(offset: UInt64(Self.chunk) - 64, length: 128) == nil)
+        #expect(cache.peek(offset: 0, length: 0) == nil)
+        #expect(cache.stats.hits == before.hits)
+        #expect(cache.stats.misses == before.misses)
+        #expect(backing.syncCount == 1)
+    }
+
+    @Test func peekSeesAnAcknowledgedWriteAndNotAFailedOne() throws {
+        let backing = PrefetchChunkCacheTests.makeBacking()
+        let cache = PrefetchChunkCacheTests.makeCache(backing: backing, minStreamBytes: .max)
+        _ = try cache.read(offset: 0, length: 512)
+        cache.willWrite(offset: 8, length: 8)
+        cache.didWrite(Data(repeating: 7, count: 8), at: 8)
+        #expect(cache.peek(offset: 8, length: 8) == Data(repeating: 7, count: 8))
+        cache.willWrite(offset: 8, length: 8)
+        cache.writeFailed(offset: 8, length: 8)
+        #expect(cache.peek(offset: 8, length: 8) == nil)
+    }
+
+    /// A speculative fetch still on its way has no bytes to give, and a
+    /// read-modify-write holding the write lock must not wait for it.
+    @Test func peekDoesNotWaitOnAFetchInFlight() throws {
+        let backing = PrefetchChunkCacheTests.makeBacking()
+        backing.asyncMode = .manual
+        let cache = PrefetchChunkCacheTests.makeCache(backing: backing)
+        _ = try cache.read(offset: 0, length: Self.chunk)
+        _ = try cache.read(offset: UInt64(Self.chunk), length: Self.chunk)
+        #expect(!backing.pending.isEmpty)
+        #expect(cache.peek(offset: UInt64(2 * Self.chunk), length: 512) == nil)
+        backing.completeAllPending(garbage: false)
+    }
+}

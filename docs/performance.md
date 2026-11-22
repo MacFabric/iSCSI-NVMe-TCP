@@ -328,3 +328,79 @@ volume.
 
 Lesson for the harness: `soak.py` should use per-process unique file names so a
 stray instance collides visibly rather than looking like corruption.
+
+## Data-path audit (2026-11-22)
+
+A read-through of FabricKit, iSCSIKit, NVMeKit, `InitiatorShared` and
+`iSCSIVolume` for algorithms, parallelism and vector work. What was changed,
+and where.
+
+### In this repository
+
+- **A write patches the cached chunk in place.** `PrefetchChunkCache.didWrite`
+  copied the whole 256 KiB entry for every write that touched it, under the
+  cache's lock, because the entry still held the bytes it was copying from. A
+  4 KiB write now costs 4 KiB. Small against a 2 ms FUA write; free to fix.
+- **The disk tier's GCM tag stays in memory.** It had a 4 KiB page of its own
+  after each chunk: a second `pread` and `pwrite` per chunk, and 4 KiB of disk
+  per slot. The slot table is in memory and dies with the session, exactly as
+  the tag on disk did.
+- **A read-modify-write reads from the cache when it can.** The read half
+  always went to the daemon. `PrefetchChunkCache.peek` answers it when every
+  byte is in memory, without waiting on a fetch in flight and without counting
+  as a read of the workload's. Safe under `ioLock`, where each acknowledged
+  write is already patched in.
+
+### In the kits (branch `perf/data-path` in each; not released)
+
+- **The engines keep receiving while they answer an R2T.** Both read loops
+  sent the Data-Out (H2CData) themselves and waited for the transport to take
+  each PDU. Against a full send buffer that is as long as the network takes to
+  drain it, and nothing was received meanwhile: no Data-In, no status, no
+  window update for any other command. With the NAS's 64 KiB FirstBurstLength
+  every 256 KiB write goes through an R2T. The answer is now queued whole and
+  not waited for. Covered by a test per engine that holds the Data-Out in the
+  transport and requires a read that arrived behind the R2T to complete.
+- **Write data is not copied on its way to the socket.** Three to four copies
+  per byte on iSCSI, two to three on NVMe/TCP, are gone: the payload is a
+  slice of the caller's buffer down to `ConnectionTransport.send(contentsOf:)`,
+  which sends header and payload from separate buffers.
+- **One send per sequence**, not one per PDU: a command with its unsolicited
+  Data-Out, and each R2T's answer.
+- `NetworkTransport.receive` returns up to 1 MiB, from 256 KiB, and
+  `NVMeTCPDeframer` no longer allocates `lastHeader` for every PDU.
+
+Loopback, `iscsi-target-sim` 0.1.0 as the target for both arms, `iscsictl`
+before and after, alternated, three runs each of 1 GiB in 1 MiB requests
+split into four 256 KiB commands (M1 Max, FirstBurstLength 64 KiB):
+
+| | before | after | |
+|---|---|---|---|
+| iSCSI write | 308 / 330 / 320 | 383 / 365 / 394 | **+19%** |
+| iSCSI write, FUA | 413 / 373 / 372 | 474 / 475 / 422 | **+18%** |
+| NVMe/TCP write | 245 / 268 / 245 | 279 / 275 / 284 | **+10%** |
+| NVMe/TCP write, FUA | 311 / 309 / 265 | 335 / 335 / 325 | **+12%** |
+| iSCSI read | 682 / 665 / 587 | 623 / 669 / 653 | none |
+| NVMe/TCP read | 417 / 488 / 449 | 483 / 408 / 478 | none |
+
+MB/s. The write arms do not overlap except iSCSI FUA, by one run. Reads were
+not expected to move and did not: the receive cap is not what bounds them
+here. These runs measure the copies and the per-PDU sends. They do not
+measure the R2T change, which needs reads and writes on one connection and
+which no bench here produces; that one rests on its tests until a mixed run
+against a real target says more. On the 1 GbE NAS none of this should show,
+for the reason this document opens with.
+
+### Left alone
+
+- **CRC32C** runs one `crc32cd` chain. Three interleaved streams measured
+  7.2 → 21.1 GB/s on this machine before the folding step a real
+  implementation needs. Worth doing when digests are in use.
+- **Read copies.** Each byte read is copied four times between the socket and
+  the caller. Loopback reads are not bound by it.
+- **One NVMe/TCP I/O queue**, where Linux opens one per CPU: the lever for
+  small-block IOPS.
+- **Two tasks per command in `withDeadline`**, and waking every CmdSN-window
+  waiter on each window update. Waking only as many as the window opened is
+  not a safe trade at these depths: a woken waiter that turns out to be
+  cancelled would strand the ones behind it.

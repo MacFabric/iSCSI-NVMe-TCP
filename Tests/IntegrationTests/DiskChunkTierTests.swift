@@ -8,7 +8,6 @@ import Testing
 struct DiskChunkTierTests {
 
     private static let chunk = 4096
-    private static let stride = chunk + DiskChunkTier.tagRoom
 
     private static func pattern(_ seed: UInt8, _ count: Int = chunk) -> Data {
         Data((0 ..< count).map { UInt8(truncatingIfNeeded: $0 &* 31 &+ Int(seed)) })
@@ -19,7 +18,7 @@ struct DiskChunkTierTests {
     private func makeTier(slots: Int, file: MemoryChunkFile = MemoryChunkFile(),
                           queue: DispatchQueue = DispatchQueue(label: "test.spill"))
         -> (DiskChunkTier, MemoryChunkFile, DispatchQueue) {
-        let tier = DiskChunkTier(file: file, budgetBytes: slots * Self.stride,
+        let tier = DiskChunkTier(file: file, budgetBytes: slots * Self.chunk,
                                  chunkBytes: Self.chunk, spillQueue: queue)
         return (tier, file, queue)
     }
@@ -87,7 +86,7 @@ struct DiskChunkTierTests {
         let plain = Self.pattern(7)
         tier.spill(offset: 0, data: plain)
         queue.sync {}
-        #expect(file.writes == 2, "ciphertext and tag")
+        #expect(file.writes == 1, "the ciphertext alone: the tag never leaves memory")
         #expect(!file.stores(plain))
     }
 
@@ -109,7 +108,7 @@ struct DiskChunkTierTests {
         for i in 0 ..< 5 { tier.spill(offset: UInt64(i * Self.chunk), data: Self.pattern(UInt8(i))) }
         queue.sync {}
         #expect(tier.slotCount == 3)
-        #expect(file.extent <= Int64(3 * Self.stride))
+        #expect(file.extent <= Int64(3 * Self.chunk))
         #expect(tier.lookup(offset: 0, length: Self.chunk) == nil, "oldest evicted")
         #expect(tier.lookup(offset: UInt64(4 * Self.chunk), length: Self.chunk) == Self.pattern(4))
     }
@@ -121,7 +120,7 @@ struct DiskChunkTierTests {
         queue.sync {}
         tier.spill(offset: 0, data: Self.pattern(1))
         queue.sync {}
-        #expect(file.writes == 2)
+        #expect(file.writes == 1)
         #expect(tier.stats.spilled == 1)
     }
 
@@ -254,7 +253,7 @@ struct DiskChunkTierTests {
         let file = MemoryChunkFile()
         let queue = DispatchQueue(label: "test.growth")
         let tier = DiskChunkTier(
-            file: file, budgetBytes: 100 * Self.stride, chunkBytes: Self.chunk, spillQueue: queue,
+            file: file, budgetBytes: 100 * Self.chunk, chunkBytes: Self.chunk, spillQueue: queue,
             freeSpace: {
                 checks += 1
                 return checks == 1 ? DiskChunkTier.reserveBytes + (1 << 30) : DiskChunkTier.reserveBytes
@@ -262,7 +261,7 @@ struct DiskChunkTierTests {
             growthCheckSlots: 4)
         for i in 0 ..< 20 { tier.spill(offset: UInt64(i * Self.chunk), data: Self.pattern(UInt8(i))) }
         queue.sync {}
-        #expect(file.extent <= Int64(4 * Self.stride))
+        #expect(file.extent <= Int64(4 * Self.chunk))
         #expect(tier.lookup(offset: UInt64(19 * Self.chunk), length: Self.chunk) == Self.pattern(19))
         #expect(tier.lookup(offset: 0, length: Self.chunk) == nil)
     }
@@ -345,9 +344,9 @@ struct DiskChunkTierTests {
     func twoTiersDoNotMix() throws {
         let dir = try temporaryDirectory()
         let qa = DispatchQueue(label: "a"), qb = DispatchQueue(label: "b")
-        let a = DiskChunkTier(file: try UnlinkedFile(directory: dir), budgetBytes: 4 * Self.stride,
+        let a = DiskChunkTier(file: try UnlinkedFile(directory: dir), budgetBytes: 4 * Self.chunk,
                               chunkBytes: Self.chunk, spillQueue: qa)
-        let b = DiskChunkTier(file: try UnlinkedFile(directory: dir), budgetBytes: 4 * Self.stride,
+        let b = DiskChunkTier(file: try UnlinkedFile(directory: dir), budgetBytes: 4 * Self.chunk,
                               chunkBytes: Self.chunk, spillQueue: qb)
         a.spill(offset: 0, data: Self.pattern(1))
         b.spill(offset: 0, data: Self.pattern(2))
@@ -362,7 +361,7 @@ struct DiskChunkTierTests {
         let result = DiskChunkTier.make(directory: dir, budgetBytes: 16 << 30, chunkBytes: 256 << 10,
                                         freeSpace: { _ in 12 << 30 })
         let tier = try result.get()
-        // 2 GiB of slots, each a 256 KiB chunk plus a 4 KiB tag page.
+        // 2 GiB of 256 KiB slots.
         #expect(tier.capacityBytes <= 2 << 30)
         #expect(tier.capacityBytes > (2 << 30) * 9 / 10)
     }
