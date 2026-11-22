@@ -1261,7 +1261,7 @@
 			repositoryURL = "https://github.com/MacFabric/FabricKit";
 			requirement = {
 				kind = exactVersion;
-				version = 0.1.1;
+				version = 0.1.2;
 			};
 		};
 		D85DA11661A4B873530570D1 /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
@@ -1277,7 +1277,7 @@
 			repositoryURL = "https://github.com/MacFabric/NVMeKit";
 			requirement = {
 				kind = exactVersion;
-				version = 0.1.1;
+				version = 0.1.2;
 			};
 		};
 		E85A5533EEC26F09E9923D43 /* XCRemoteSwiftPackageReference "iSCSIKit" */ = {
@@ -1285,7 +1285,7 @@
 			repositoryURL = "https://github.com/MacFabric/iSCSIKit";
 			requirement = {
 				kind = exactVersion;
-				version = 0.1.1;
+				version = 0.1.2;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

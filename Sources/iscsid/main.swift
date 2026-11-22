@@ -28,10 +28,18 @@ if let raw = ProcessInfo.processInfo.environment["ISCSI_TASK_TIMEOUT_SEC"], let 
 // persist, nothing removeAllData can lose, nothing a hostname change moves.
 let nvmeHost = HostIdentity.nvmeHost()
 
+// I/O queues per NVMe/TCP controller, each a TCP connection of its own.
+//   NVME_IO_QUEUES=4  -> ask for four; the controller may allow fewer
+var nvmeIOQueues = 1
+if let raw = ProcessInfo.processInfo.environment["NVME_IO_QUEUES"], let count = Int(raw), count > 0 {
+    nvmeIOQueues = count
+}
+
 let core = DaemonCore(
     initiatorName: initiatorName,
     policy: policy,
-    hostIdentity: nvmeHost
+    hostIdentity: nvmeHost,
+    nvmeIOQueueCount: nvmeIOQueues
 ) { host, port, binding in
     try await NetworkTransport.connect(host: host, port: port, binding: binding)
 }

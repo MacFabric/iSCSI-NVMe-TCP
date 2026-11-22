@@ -43,6 +43,12 @@ struct NVMeOptions: ParsableArguments {
     @Flag(help: "Do not offer header and data digests.")
     var noDigests = false
 
+    @Option(help: ArgumentHelp(
+        "I/O queues to ask for, each a TCP connection of its own.",
+        discussion: "The controller may allow fewer. The daemon opens one unless "
+            + "$NVME_IO_QUEUES says otherwise."))
+    var ioQueues = 1
+
     enum LogLevel: Int, ExpressibleByArgument {
         case useful = 1
         case debug = 2
@@ -102,6 +108,7 @@ struct NVMeOptions: ParsableArguments {
     func controller(subsystem: String) throws -> NVMeController {
         var config = NVMeControllerConfig(host: try identity(), subsystemNQN: subsystem)
         config.requestDigests = !noDigests
+        config.ioQueueCount = max(1, ioQueues)
         return NVMeController(config: config) { try await openTransport() }
     }
 }

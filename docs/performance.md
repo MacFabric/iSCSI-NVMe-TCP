@@ -419,8 +419,8 @@ about half a second. The time is spent above the extension, on the default
 
 ### The rest of the list (2026-11-22, later)
 
-Everything the first pass left alone, bar one item. In the kits these are on
-branch `perf/read-path`, not released; this repository's half needs them.
+Everything the first pass left alone, bar one item. The kits' part is
+FabricKit, iSCSIKit and NVMeKit 0.1.2.
 
 - **CRC32C runs three instruction chains at once**, folded with PMULL. The
   instruction has a three-cycle latency, so one chain used a third of the
