@@ -351,7 +351,7 @@ and where.
   as a read of the workload's. Safe under `ioLock`, where each acknowledged
   write is already patched in.
 
-### In the kits (branch `perf/data-path` in each; not released)
+### In the kits (FabricKit, iSCSIKit and NVMeKit 0.1.1)
 
 - **The engines keep receiving while they answer an R2T.** Both read loops
   sent the Data-Out (H2CData) themselves and waited for the transport to take
@@ -370,7 +370,7 @@ and where.
 - `NetworkTransport.receive` returns up to 1 MiB, from 256 KiB, and
   `NVMeTCPDeframer` no longer allocates `lastHeader` for every PDU.
 
-Loopback, `iscsi-target-sim` 0.1.0 as the target for both arms, `iscsictl`
+Loopback, `iscsi-target-sim` built on the 0.1.0 kits as the target for both arms, `iscsictl`
 before and after, alternated, three runs each of 1 GiB in 1 MiB requests
 split into four 256 KiB commands (M1 Max, FirstBurstLength 64 KiB):
 

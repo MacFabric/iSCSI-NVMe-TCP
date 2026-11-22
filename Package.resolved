@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/MacFabric/FabricKit",
       "state" : {
-        "revision" : "412e45a55c4dd248cb4479aa50b05381d64a97b4",
-        "version" : "0.1.0"
+        "revision" : "b521ccd4903dca0b44d37264c88a658e67e71b82",
+        "version" : "0.1.1"
       }
     },
     {
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/MacFabric/iSCSIKit",
       "state" : {
-        "revision" : "4e02b9810c7241864f3aec1c35a4e6059bc2d734",
-        "version" : "0.1.0"
+        "revision" : "1f61542228e412adaef4633b9152bfbee1f991cc",
+        "version" : "0.1.1"
       }
     },
     {
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/MacFabric/NVMeKit",
       "state" : {
-        "revision" : "d09daac70407b469e2e24c1439dceca5c7039a19",
-        "version" : "0.1.0"
+        "revision" : "8cec7a8438ac85cb6301346c3e52499f33df5e1f",
+        "version" : "0.1.1"
       }
     },
     {
