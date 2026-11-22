@@ -68,8 +68,9 @@ print("write calls: %d, median %.0f ms, p99 %.0f ms, longest %.0f ms" % (
     len(ws), ws[len(ws) // 2] * 1000, ws[len(ws) * 99 // 100] * 1000, ws[-1] * 1000))
 for name, op, i, start, end in long:
     others = [c for c in calls if c[0] != name and c[3] < end and c[4] > start and c[4] - c[3] >= 0.5]
-    print("[%7.2f - %7.2f] %s %s #%d took %.2f s; meanwhile: %s" % (
-        start - t0, end - t0, name, op, i, end - start,
+    print("[%7.2f - %7.2f] (%s - %s) %s %s #%d took %.2f s; meanwhile: %s" % (
+        start - t0, end - t0, time.strftime("%H:%M:%S", time.localtime(start)),
+        time.strftime("%H:%M:%S", time.localtime(end)), name, op, i, end - start,
         "; ".join("%s %s #%d %.2f-%.2f" % (c[0], c[1], c[2], c[3] - t0, c[4] - t0) for c in others) or
         "nothing else took 0.5 s"))
     # how many calls did the others complete during it

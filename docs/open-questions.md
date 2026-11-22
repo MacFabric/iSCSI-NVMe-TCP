@@ -1464,59 +1464,85 @@ see a slow command, which is why none of them ever logged one.
   `pwrite` on `lun0.img`. A file's flush waits its turn behind everything
   the other writers have queued, at the 40-odd MiB/s the target commits.
 
-**What is not established.**
+**On a disk whose speed is under control** (same afternoon: `iscsi-target-sim`
+on the VM, file-backed, slowed with `fault responsedelayms`), three writers of
+256 MiB each, launchd's syncs timed with `fs_usage`:
 
-- *The trigger is not under control.* In one run a background-priority
-  `sync` issued every 4 s (`taskpolicy -b /bin/sync`) coincided to within
-  tenths of a second with a stalled write five times out of seven (7.2, 3.5,
-  5.0, 9.1 and 8.1 s). In fourteen later runs, with `sync` at default or
-  background priority or left to launchd, no write took longer than 3 s,
-  although the syncs themselves took up to 9 s. So a long sync is not
-  enough: the writer also has to need the exclusive lock while the sync
-  holds it, and when that is has not been worked out.
-- *Whether the sync's priority matters.* launchd's thread has a background
-  base priority, and background I/O is throttled behind foreground I/O,
-  which would explain a sync held for 16 s. But the alternated trials above
-  showed no difference between background and default, because neither
-  stalled anything.
-- *Whether DiskImages2 avoids it.* Three runs on DiskImages2 (one with
-  background syncs, two of the original load) had no stalled write, and it
-  wrote faster (57 against 43 MiB/s) with the helper's serial queue gone.
-  But they were taken after `hdiutil` had stopped showing the stall too, so
-  they do not separate the engines.
-- *Why it stopped.* Stalls in nearly every run from 10:00 to 13:05, on fresh
-  attaches included; none from 13:10 on. The volume was re-attached in
-  between, which had not cured it earlier in the day.
+| response delay | throughput | longest `write()` |
+|---|---|---|
+| 0 ms | 108 MiB/s | 0.2 s |
+| 2 ms | 24 MiB/s | 1.0 s |
+| 5 ms | 11 MiB/s | 32 to 45 s in three runs of four |
+
+- **The stalled write is the sync.** At 5 ms: a write stuck 14:43:24 to
+  14:44:02 beside a launchd sync of 38.6 s ending 14:44:02.7; 14:44:24 to
+  14:45:10 beside one of 46.6 s ending 14:45:10.8; 14:45:56 to 14:46:28
+  beside one of 35.6 s ending 14:46:29.9. A sync that lasts long moves on:
+  one of 56 s stalled one writer for 34 s and then the next for 18 s.
+- **It scales with how slow the disk is**, which is why it comes and goes
+  against the NAS and was not seen at all at full simulator speed.
+- **The writer it hits is a buffered one.** With two buffered appenders as
+  competition, a writer that behaves as a disk image does (a preallocated
+  file rewritten in place from a page-aligned buffer with `F_NOCACHE`, no
+  fsync) never waited more than 2.3 s in two 75 s runs, while one of the
+  appenders beside it stalled for 18 s and 21 s on launchd's syncs. The same
+  measured writer, buffered and appending, stalled for 8 s and 10 s. The
+  in-place writer pays differently: 1.6 MiB/s against the appenders'
+  9 MiB/s, because their bursts fill the one-at-a-time queue.
+
+**What is still not established.**
+
+- *Whether the sync's priority matters.* launchd's cannot be turned off, so
+  a `sync` of mine at either priority mostly waits behind it, and every
+  stall of ten seconds or more in those trials began at :24 or :54, which
+  is launchd's. With no stall to attribute to mine, the only number is how
+  long mine took against a measured writer and two competitors: 12 to 27 s
+  at default priority, 49 and 68 s at background. Consistent with
+  background I/O being throttled; too few to lean on.
+- *Whether DiskImages2 avoids it.* Alternated on the slowed simulator, with
+  512-byte blocks so `diskutil image attach` can be used: `hdiutil` stalled
+  11 to 34 s in two runs of three (syncs of 20 to 56 s); DiskImages2 3 to
+  5 s in four runs (syncs of 1 to 15 s); `hdiutil` again 3 to 5 s in three
+  runs (syncs of 4 to 19 s). The third leg undoes the first two. The same
+  thing happened on the NAS: long stalls on `hdiutil`, none on DiskImages2,
+  then none on `hdiutil` either. Either something in a DiskImages2 session
+  outlasts it, or the stall drifts for a reason not yet found; this does
+  not say which.
+- *Why it varies at one disk speed.* At 5 ms it ranged from nothing to 45 s.
 
 **It is not the NAS filling a log device.** That was a reasonable guess for
 a stall that looks related to bytes written, and it may yet explain the
 six-minute crawl recorded in `performance.md`, where the daemon itself saw
-1 to 2 s per megabyte. Here the device is answering promptly throughout.
+1 to 2 s per megabyte. Here the device is answering promptly throughout,
+and the simulator, which has no log device, reproduces it.
 
-**Why it matters.** A guest's disk driver gives up sooner than this. The
-FreeBSD panic that made DiskImages2 opt-in was a 10 s disk timeout, and this
-is the engine that was the answer to it. A VM image on an attached volume is
-one big file with one writer, though, not three files with three: whether a
-single writer can be starved this way is the next thing to find out.
+**What it means for this project.** The stall belongs to macOS: a periodic
+sync, a per-file lock, and a backlog of buffered writes that takes long to
+flush to a slow disk. Nothing in the extension or the daemon is waiting. A
+VM's disk image was not the victim in the one configuration tried, which is
+the case that matters most and deserves more than two runs. What this
+project controls is how slow the disk is: write-through to a target that
+commits every write is what puts an attached volume in the range where the
+stall appears.
 
 **How to attack it next.**
 
-1. One writer, with a second process generating the competing load on other
-   files, and launchd's sync timed with `sudo fs_usage -w -f filesys
-   launchd`: does the lone writer ever stall?
-2. Page-aligned buffers, so `F_NOCACHE` writes go straight through and
-   there is no backlog for the sync to flush.
-3. The same load against `iscsi-target-sim` on the VM, where the device can
-   be made as slow or as fast as wanted (`responsedelayms`): does the stall
-   scale with how slow the disk is?
-4. Both engines, alternated in one session, now that the stall is known to
-   come and go.
+1. More runs of the disk-image-style writer, alone and with a guest's mix
+   of sizes, including the flushes a guest issues.
+2. `hdiutil` after a DiskImages2 session against `hdiutil` after a reboot,
+   to find out whether the third leg above is carry-over or drift.
+3. The same slowed simulator with the target's flush policy relaxed, to
+   see how much of the stall the write-through setting is buying.
 
-Tools: `scripts/write-stall.py` (per-call timing, what the other writers
-did meanwhile, a capture command when a write is stuck) and
+Tools: `scripts/write-stall.py` (three writers, every call timed, what the
+others did meanwhile, a capture command when a write is stuck),
 `scripts/write-stall-mixed.py` (the same around the unchanged
-`mixed-load.py`). `sudo spindump -notarget 3 10 -file …` is the capture that
-found it; `sample` cannot see the kernel frames that matter.
+`mixed-load.py`) and `scripts/write-stall-single.py` (one measured writer,
+appending or in place, aligned or not, against competitors). `sudo spindump
+-notarget 3 10 -file …` is the capture that found it, since `sample` cannot
+see the kernel frames that matter, and `sudo fs_usage -w -f filesys launchd`
+times the syncs. A detail that cost an hour: a sync holds the newest file
+longest, so a script that times only its first writer sees nothing.
 
 ## A note on method
 
