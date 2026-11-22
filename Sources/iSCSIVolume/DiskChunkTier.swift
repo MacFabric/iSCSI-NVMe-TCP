@@ -9,6 +9,7 @@
 
 import CryptoKit
 import Foundation
+import os
 
 /// Positional I/O on the cache file. Injectable so tests can fail or tamper
 /// with it; the real one is `UnlinkedFile`.
@@ -309,20 +310,47 @@ public final class DiskChunkTier: @unchecked Sendable {
         }
         lock.unlock()
 
-        var out = Data(capacity: length)
-        for (co, slot) in wanted {
+        // Each chunk is a read and a decryption of its own, so a request
+        // that spans several does them at once: a megabyte is four chunks.
+        // One chunk, the usual case below the chunk size, stays on this
+        // thread.
+        let plains = OSAllocatedUnfairLock(initialState: [Data?](repeating: nil, count: wanted.count))
+        let readFailure = OSAllocatedUnfairLock<String?>(initialState: nil)
+        let key = self.key
+        let file = self.file
+        let chunkBytes = self.chunkBytes
+        @Sendable func open(_ index: Int, _ co: UInt64, _ slot: Slot) {
             let ciphertext: Data
             do {
                 ciphertext = try file.read(at: Int64(slot.index) * Int64(chunkBytes), count: slot.length)
             } catch {
-                disable("read failed: \(error)")
-                return nil
+                readFailure.withLock { $0 = $0 ?? "\(error)" }
+                return
             }
             guard let box = try? AES.GCM.SealedBox(nonce: slot.nonce, ciphertext: ciphertext, tag: slot.tag),
                   let plain = try? AES.GCM.open(box, using: key,
                                                 authenticating: Self.aad(offset: co, length: slot.length))
-            else {
-                notAuthentic(co, slot)
+            else { return }
+            plains.withLock { $0[index] = plain }
+        }
+        if wanted.count == 1 {
+            open(0, wanted[0].offset, wanted[0].slot)
+        } else {
+            let all = wanted
+            DispatchQueue.concurrentPerform(iterations: all.count) { open($0, all[$0].offset, all[$0].slot) }
+        }
+        if let why = readFailure.withLock({ $0 }) {
+            disable("read failed: \(why)")
+            return nil
+        }
+        let opened = plains.withLock { $0 }
+        var out = Data(capacity: length)
+        for (index, (co, _)) in wanted.enumerated() {
+            guard let plain = opened[index] else {
+                // Every chunk that failed is settled, not just the first.
+                for (other, entry) in wanted.enumerated() where opened[other] == nil {
+                    notAuthentic(entry.offset, entry.slot)
+                }
                 return nil
             }
             let from = Int(max(offset, co) - co)

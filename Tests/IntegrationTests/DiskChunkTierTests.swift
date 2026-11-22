@@ -80,6 +80,37 @@ struct DiskChunkTierTests {
         #expect(tier.lookup(offset: UInt64(8 * Self.chunk) + 512, length: 512) == nil)
     }
 
+    /// A request over several chunks reads and decrypts them at once; what
+    /// comes back must be the chunks in order, cut to the request.
+    @Test("a lookup spanning several chunks returns them in order")
+    func lookupAcrossManyChunks() {
+        let (tier, file, queue) = makeTier(slots: 16)
+        var whole = Data()
+        for i in 0 ..< 6 {
+            let chunk = Self.pattern(UInt8(40 + i))
+            whole.append(chunk)
+            tier.spill(offset: UInt64(i * Self.chunk), data: chunk)
+            queue.sync {}
+        }
+        #expect(tier.lookup(offset: 0, length: 6 * Self.chunk) == whole)
+        // Starting and ending inside a chunk.
+        let from = Self.chunk + 512
+        let length = 3 * Self.chunk + 1024
+        #expect(tier.lookup(offset: UInt64(from), length: length) == whole.subdata(in: from ..< from + length))
+        #expect(tier.stats.hits == 2)
+        // One chunk of the span missing: the whole lookup is a miss.
+        tier.invalidate(offset: UInt64(3 * Self.chunk), length: 1)
+        #expect(tier.lookup(offset: 0, length: 6 * Self.chunk) == nil)
+        // Every chunk of a span failing authentication is counted and freed.
+        file.tamper = true
+        #expect(tier.lookup(offset: 0, length: 3 * Self.chunk) == nil)
+        #expect(tier.stats.corrupt == 3)
+        file.tamper = false
+        #expect(tier.lookup(offset: 0, length: Self.chunk) == nil, "a corrupt chunk does not come back")
+        #expect(tier.lookup(offset: UInt64(4 * Self.chunk), length: 2 * Self.chunk)
+                == whole.subdata(in: 4 * Self.chunk ..< 6 * Self.chunk))
+    }
+
     @Test("the file holds ciphertext, never the chunk itself")
     func storedBytesAreEncrypted() {
         let (tier, file, queue) = makeTier(slots: 4)
