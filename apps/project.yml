@@ -46,15 +46,15 @@ packages:
   # released against.
   iSCSIKit:
     url: https://github.com/MacFabric/iSCSIKit
-    exactVersion: 0.1.0
+    exactVersion: 0.1.2
   NVMeKit:
     url: https://github.com/MacFabric/NVMeKit
-    exactVersion: 0.1.0
+    exactVersion: 0.1.2
   # No target links FabricKit directly; it is named so that its version is
   # pinned here rather than left to whichever 0.1.x is newest on build day.
   FabricKit:
     url: https://github.com/MacFabric/FabricKit
-    exactVersion: 0.1.0
+    exactVersion: 0.1.2
 
 settings:
   base:

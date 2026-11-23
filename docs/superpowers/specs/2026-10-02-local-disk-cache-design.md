@@ -196,9 +196,12 @@ Stated as an invariant, with tests:
   crash — so there is no leftover sweep and no ownership logic.
 - **`F_NOCACHE`** on the descriptor: the tier sits *under* the buffer cache, and
   caching its file in the same buffer cache would spend RAM twice on one chunk.
-- **Fixed slots.** Stride = chunk size + 4 KiB (the 16-byte GCM tag lives in the
-  extra page, keeping chunk data page-aligned). Slot count =
-  `budgetBytes / stride`, so the file never exceeds the budget. 16 GB of
+- **Fixed slots.** Stride = chunk size, and slot count =
+  `budgetBytes / stride`, so the file never exceeds the budget. The 16-byte
+  GCM tag stays in the in-memory index with the nonce. (Until 2026-11-22 it
+  had a 4 KiB page of its own after each chunk, which cost a second read and
+  write per chunk and bought nothing: the index does not outlive the process
+  either.) 16 GB of
   256 KiB chunks is ~64,500 slots; the index (chunk offset → slot, nonce,
   length, segment links) is a few MB of memory.
 - **Encryption.** CryptoKit `AES.GCM`, a `SymmetricKey(size: .bits256)` made

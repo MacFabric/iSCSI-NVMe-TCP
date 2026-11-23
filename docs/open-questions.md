@@ -1426,6 +1426,353 @@ one locked volume):
 
 `iscsictl nvme attach` does no unlocking: it is the app's code alone.
 
+## 21. One writer starved for 10 to 26 s inside APFS, behind launchd's periodic sync (2026-11-22)
+
+Under three concurrent writers on an attached volume, one `write()` of 1 MiB
+sometimes takes 10 to 26 s while the other two writers carry on. Seen all
+morning on both VMs and on builds 57.1, 57.3 and 57.4, so it is not this
+work; then investigated on VM 27 (27.2.1, 57.4, `name-testing`, `hdiutil`).
+
+**What it is.** A spindump taken while a write had been stuck for four
+seconds (it ran to 16.8 s) shows:
+
+- the stuck writer in `apfs_vnop_write` → `prepare_write_and_lock` →
+  `apfs_io_lock_shared_to_exclusive`, waiting to upgrade a lock on its own
+  file, for every sample;
+- at the same time launchd's `bgioq` thread in `sync(2)` →
+  `apfs_vfsop_sync` → `apfs_sync_callback` → `apfs_fsync_internal_ext` →
+  `cluster_push_err` → `vnode_waitforwrites`, flushing a file and waiting
+  for its writes to drain, for every sample;
+- the other two writers working: each completed five write-and-fsync cycles
+  during the stall.
+
+So nothing below APFS is stuck. The extension, the daemon and the NAS never
+see a slow command, which is why none of them ever logged one.
+
+**What feeds it.**
+
+- launchd calls `sync(2)` every 30 s (measured with `fs_usage`: 13:34:24,
+  :54, 13:35:24). Idle, it takes 10 to 30 ms. Under this load it took 3 to
+  9 s. A stall at most once per phase of the load is that cadence.
+- `write()` returns in under a millisecond and `F_FULLFSYNC` takes 1.5 to
+  12 s: the load's `F_NOCACHE` does not stop its writes being buffered (its
+  buffers are not page-aligned), so there is a backlog of tens of megabytes
+  per file for a sync to flush. `scripts/mixed-load.py` times only
+  `write()`, which is why the fsyncs never showed.
+- The `hdiutil` path is one request at a time: `diskimages-helper` has a
+  single thread taking a request from `IOHDIXHDDriveOutKernel` and doing a
+  `pwrite` on `lun0.img`. A file's flush waits its turn behind everything
+  the other writers have queued, at the 40-odd MiB/s the target commits.
+
+**On a disk whose speed is under control** (same afternoon: `iscsi-target-sim`
+on the VM, file-backed, slowed with `fault responsedelayms`), three writers of
+256 MiB each, launchd's syncs timed with `fs_usage`:
+
+| response delay | throughput | longest `write()` |
+|---|---|---|
+| 0 ms | 108 MiB/s | 0.2 s |
+| 2 ms | 24 MiB/s | 1.0 s |
+| 5 ms | 11 MiB/s | 32 to 45 s in three runs of four |
+
+- **The stalled write is the sync.** At 5 ms: a write stuck 14:43:24 to
+  14:44:02 beside a launchd sync of 38.6 s ending 14:44:02.7; 14:44:24 to
+  14:45:10 beside one of 46.6 s ending 14:45:10.8; 14:45:56 to 14:46:28
+  beside one of 35.6 s ending 14:46:29.9. A sync that lasts long moves on:
+  one of 56 s stalled one writer for 34 s and then the next for 18 s.
+- **It scales with how slow the disk is**, which is why it comes and goes
+  against the NAS and was not seen at all at full simulator speed.
+- **The writer it hits is a buffered one.** With two buffered appenders as
+  competition, a writer that behaves as a disk image does (a preallocated
+  file rewritten in place from a page-aligned buffer with `F_NOCACHE`, no
+  fsync) never waited more than 2.3 s in two 75 s runs, while one of the
+  appenders beside it stalled for 18 s and 21 s on launchd's syncs. The same
+  measured writer, buffered and appending, stalled for 8 s and 10 s. The
+  in-place writer pays differently: 1.6 MiB/s against the appenders'
+  9 MiB/s, because their bursts fill the one-at-a-time queue.
+
+**The kernel's background-I/O throttle is what makes it long** (evening,
+after a reboot of the VM, which brought the severe stalls back). launchd's
+sync thread runs at a background priority, and background I/O is throttled
+behind foreground I/O: `debug.lowpri_throttle_max_iosize` is 128 KiB, with a
+200 ms pause between pieces on a disk that is not solid-state (25 ms on one
+that is) while foreground I/O has happened in the last half second. Three
+writers, slowed simulator, alternated:
+
+| `debug.lowpri_throttle_enabled` | longest stalled `write()` | launchd's syncs |
+|---|---|---|
+| 1 (default) | 28.3, 2.5 and 42.9 s | up to 31 and 46 s |
+| 0 | 3.1, 2.0 and 2.2 s | 15 s at most |
+
+Both attach engines present the disk with "Solid State: Info not
+available", so it gets the spinning-disk pause.
+
+**Without APFS there is no stall.** Three writers straight onto the scratch
+disk's raw device, same disk speed, 9 to 11 minutes after boot: every write
+between 178 and 217 ms, 16.5 MiB/s against about 13 through APFS, and
+launchd's syncs back to 0.1 to 0.3 s. The disk under the filesystem is even
+and steady; the whole effect is in the layer above it. A filesystem cannot
+be mounted from `/dev/rdiskN`, but a virtual machine can be handed one as
+its disk, which takes APFS, its buffering and this lock out of the path.
+
+**What a hypervisor would meet on that device** (27.2.1, `hdiutil`, a
+blank simulator LUN, the app running; `scripts/raw-device-check.py`):
+
+- *It needs no root.* `/dev/diskN` and `/dev/rdiskN` belong to the account
+  that attached, mode 640, as `hdiutil` leaves any image's nodes.
+- *The LUN must hold nothing macOS mounts.* A blank one stays attached with
+  no volume, and the app leaves it alone. One with a mounted volume cannot be
+  freed for a guest by unmounting it: the app takes the unmount for an eject
+  and detaches the disk (item 22 is the same handler).
+- *Writes must be whole 512-byte blocks at block offsets* on the raw node
+  (EINVAL otherwise), from any buffer. The block node takes anything and
+  goes through the buffer cache.
+- *A guest's flush goes nowhere.* `fsync` and both synchronize ioctls return
+  success in under 4 ms and the extension's flush count does not move;
+  `F_FULLFSYNC` is ENOTTY. This is the missing barrier signal of
+  `backend-a-fskit-notes.md` again, so on the raw device, as under APFS, the
+  target's flush policy is the whole of durability: write-through by default,
+  and with a relaxed policy a guest that flushed has been told a lie.
+- The device advertises unmap, and neither FUA nor barriers.
+
+**A guest on the raw device is not stalled; one on an image file is**
+(27.2.1, 4 cores, rebooted for the severe state; two simulator disks
+slowed to about 11 MiB/s, one APFS with a sparse image file on it, one
+blank; an Alpine Linux guest in QEMU 11.1.3 writing 768 MiB to its disk in
+4 MiB direct writes, each timed inside the guest; QEMU emulates the
+processor here, since a macOS guest has no hypervisor, but its disk path is
+the ordinary one; `scripts/write-stall-guest.py`). The state was confirmed
+severe before and after with three buffered writers (23.8 and 43.2 s).
+
+| guest's disk | alone: longest write | beside two writers on the APFS volume: longest write | throughput beside them |
+|---|---|---|---|
+| image file on APFS | 1.8, 0.9, 1.6 s | **26.3, 5.1, 26.8 s** | 7.7 to 8.1 MiB/s |
+| raw device `/dev/rdiskN` | 0.39, 0.38, 0.44 s | 0.38, 0.44, 0.39 s | 13.5 to 13.8 MiB/s |
+
+Alone, the guest is the only writer on its volume and launchd's syncs stay
+at 4 s or less, so even the image file gets through. Beside other writers
+it is the volume's slowest writer and the one held. On the raw device it
+was never held, while the writers beside it on the APFS volume still were
+(12.0 and 8.6 s). The Linux guest logged nothing about either stall; a
+guest with a disk timeout under 27 s would have, and the FreeBSD guest in
+the DiskImages2 case above panicked on one of 10 s.
+
+**On a real Mac, on the NAS: the Virtualization framework's default mode is
+the worst case** (the development Mac, 27.2.1, up a day, so in the milder
+state; `ssd-vms` on the NAS, an image file on its APFS volume; the same
+Alpine guest, under the framework through `scripts/vz-guest.swift` and
+under QEMU with Hypervisor.framework; build 57.4, also seen on 0.9.2).
+
+How the image file is opened decides the speed. 128 MiB alone:
+
+| guest, image-file mode | DiskImages2 | `hdiutil` |
+|---|---|---|
+| QEMU, default (host page cache) | 7.7 MiB/s, longest 3.0 s | 6.6 MiB/s, longest 3.6 s |
+| framework, `automatic` (its default) | **1.5 MiB/s**, 13 writes of 3 s or more | **1.2 MiB/s**, 14 |
+| framework, `uncached` | 1.5 MiB/s, 11 | 1.3 MiB/s, 12 |
+| framework, `cached` | 10.0 MiB/s, longest 1.3 s | 9.2 MiB/s, longest 1.1 s |
+
+The guest's queue is the same under both (4 MiB requests, a write-back
+cache advertised), so the difference is on the Mac's side: `automatic`
+behaves as `uncached`, every write reaches the volume unmerged, and each
+waits for the target to commit it under the default write-through policy.
+That reading is mine and not yet traced; the extension and daemon logged
+nothing slow while it happened.
+
+Beside two buffered writers on the same volume, 512 MiB per guest run (two
+runs each), and 128 MiB for the framework's default:
+
+| guest | DiskImages2: longest write | `hdiutil`: longest write |
+|---|---|---|
+| framework, `cached` | 16.0, 7.0 s | 8.8, 6.3 s |
+| QEMU, default | 7.6, 8.2 s | 5.9, 9.0 s |
+| framework, `automatic` | **64.2 s** | **76.6 s** |
+
+The framework's default write was the guest's first, and it was held for
+as long as the other writers ran (66.5 and 79.6 s): starved, not caught by
+a sync. A guest with any disk timeout under a minute would have failed it.
+The control writers here never stalled past 8.2 s, so this Mac was in the
+mild state; on VM 27 the guests on an image file reached 27 s in the severe
+one. Within this Mac, the engines made no difference worth reading.
+
+**On the raw device of a blank attached LUN, neither hypervisor is held,
+and both run ten times faster** (same Mac and state, an hour later;
+`name-testing` over NVMe/TCP, blanked at both ends, attached with
+`hdiutil` and left with no volume; the framework through
+`VZDiskBlockDeviceStorageDeviceAttachment` on `/dev/rdiskN`, opened
+without root because `hdiutil` gives the nodes to the attaching account;
+the guest's random data read back from the device afterwards). Alone,
+1 GiB; beside the same two writers on `ssd-vms`, 4 GiB so the guest
+overlapped most of their run:
+
+| guest on the raw device | alone | beside two writers: longest write | throughput beside them |
+|---|---|---|---|
+| framework | 82.4 MiB/s, longest 0.64 s | 0.63, 1.03 s | 80.0, 80.2 MiB/s |
+| QEMU, default | 95.3 MiB/s, longest 0.10 s | 0.90, 1.06 s | 65.6, 70.4 MiB/s |
+| QEMU, `cache=none` | 95.2 MiB/s, longest 0.09 s | | |
+
+The writers beside them on the APFS volume were held up to 4.0 s, and the
+three-writer control afterwards up to 8.2 s, so the stall was there to be
+met. The same LUN path that gives an image-file guest 7 to 10 MiB/s gives
+a raw-device guest 80 to 95: the cost of an image file on an attached
+volume is APFS above the disk, not the initiator under it. The raw device
+still has no flush (above), so durability is the target's flush policy.
+
+Not tried: the raw device in the severe state on a real Mac (it needs a
+reboot).
+
+**On HFS+ the image-file guests are not held either, and run two to four
+times faster than on APFS** (same Mac and state, the same hour; `ssd-vms`
+erased as journaled HFS+ with the app quit, still attached with `hdiutil`;
+`probe` and the two-round suite unchanged from the APFS runs above). One
+run of each, and the APFS figures are from the evening before:
+
+| guest, image file | APFS (`hdiutil`) | HFS+ |
+|---|---|---|
+| QEMU default, 128 MiB alone | 6.6 MiB/s, longest 3.6 s | 24.3 MiB/s, longest 0.65 s |
+| framework `cached`, 128 MiB alone | 9.2 MiB/s, longest 1.1 s | 41.7 MiB/s, longest 0.44 s |
+| framework `automatic`, 128 MiB alone | 1.2 MiB/s, 14 writes of 3 s or more | 1.3 MiB/s, 16 |
+| framework `cached`, 512 MiB alone | 6.3, 6.6 MiB/s | 26.6, 18.1 MiB/s |
+| QEMU default, 512 MiB alone | 6.3 MiB/s | 19.0, 29.0 MiB/s |
+| framework `cached` beside two writers: longest | 8.8, 6.3 s | 1.38, 2.11 s |
+| QEMU default beside two writers: longest | 5.9, 9.0 s | 1.87, 1.93 s |
+| framework `automatic` beside two writers: longest | 76.6 s | **31.5 s** |
+| three-writer control: longest `write()` | 7.5 s | 1.65 s |
+
+On HFS+ the writers' `write()` calls were never held past 3.0 s, but
+their `F_FULLFSYNC` calls took 3 to 7 s at the median and up to 22.6 s:
+the wait moved from the write into the flush the writer asked for, which
+is where a writer expects it. The framework's default mode is no better
+on HFS+, 1.0 to 1.4 MiB/s, and its first write beside the writers was
+again held as long as they ran (31.5 s against their 34.3 s), so that
+starvation is the framework's uncached path, not APFS. Not tried: HFS+ in
+the severe state.
+
+**Flushing the volume ourselves, at normal priority, helps and does not
+cure** (`sync_volume_np` on the volume every 3 s from an unprivileged
+process, severe state, alternated): longest stall 3.4, 11.0 and 3.3 s with
+it, against 12.9 and 28.7 s without, and 22 s twice just before. Each flush
+took about 10 s on this disk and holds each file for about 3 s as it passes,
+so it trades one long stall for a steady supply of short ones.
+
+**Whose I/O priority matters: the writers', not ours.** After another reboot,
+alternated on APFS: with ordinary writers the stalls were 28.3 s (after one
+of 19.4 s) and 35.1 s; with the same writers started under `taskpolicy -d
+passive` they were 3.1 and 2.9 s. Passive I/O is the kind the kernel does
+not count as a reason to throttle anything else, so the sync was never held
+back. That is also why setting an I/O policy on the daemon or the extension
+cannot help: `setiopolicy_np` changes the calling process or thread only,
+the throttled thread is launchd's, and what triggers its throttling is the
+foreground I/O of whichever application is writing to the volume.
+
+**ExFAT is mostly spared.** The same disk formatted ExFAT, which macOS 27
+mounts through its own FSKit module, in the first five minutes after a
+reboot: five runs, one with a 35 s stalled write beside a 35 s sync (the
+first run after the format) and four with no write over 5 ms and syncs of
+0.2 to 0.3 s. It also wrote faster, about 15 MiB/s against 11 on APFS in
+the same window. APFS on the same disk a minute later stalled 16 and 34 s.
+
+**A flush every second is no better than one every three.** Each flush
+takes 9 to 12 s on this disk, so the interval is never reached and the
+flushing is continuous either way: one run of two still had a 24 s stall,
+and both had four to seven pauses of 3 to 4 s. Over both intervals, two
+runs of five kept a long stall, against every run without.
+
+**What is still not established.**
+
+- *What switches the stall between severe and mild.* At one disk speed it
+  is either 20 to 45 s or about 3 s, for long stretches, and the throttle
+  settings make no difference at all while it is mild. A reboot brought the
+  severe state back for about a quarter of an hour. Ruled out as the
+  switch: a DiskImages2 session carrying over (a disk never attached that
+  way was mild), uptime alone (severe two hours into one boot), and
+  foreground writes to the internal disk (ten fsyncs a second there changed
+  nothing).
+- *Whether DiskImages2 avoids it.* Four DiskImages2 runs 18 to 22 minutes
+  after the reboot stalled 4.3 s at most; but four `hdiutil` runs at 27 to
+  31 minutes were mild too, so the window may simply have closed. Three
+  attempts at this comparison, none conclusive.
+
+**It is not the NAS filling a log device.** That was a reasonable guess for
+a stall that looks related to bytes written, and it may yet explain the
+six-minute crawl recorded in `performance.md`, where the daemon itself saw
+1 to 2 s per megabyte. Here the device is answering promptly throughout,
+and the simulator, which has no log device, reproduces it.
+
+**What this project can and cannot do about it.**
+
+- *Cannot:* set a throttle policy for a drive. The pause is chosen by the
+  kernel from what the disk's driver reports, and the driver is Apple's
+  disk-image driver on both engines; neither `hdiutil attach` nor `diskutil
+  image attach` has an option for it. The only switches are the `debug.`
+  sysctls, which are root-only and change background I/O for every disk on
+  the machine. launchd's sync cannot be turned off or made to skip a
+  volume.
+- *Can:* keep the disk fast, since the stall is the backlog divided by what
+  the throttled sync is allowed; document that a virtual machine is
+  better given the raw device of an attached disk with no volume on it than
+  an image file on an attached volume (shown above with QEMU), and, once
+  each has been tried with a guest, that an image file is better kept on
+  ExFAT than on APFS and that a hypervisor started with `taskpolicy -d
+  passive` does not set the stall off; and, if it earns its
+  place, run the periodic flush above from the app for volumes it attached.
+- *Could, at a price:* have the daemon, which is root, turn the kernel's
+  throttle off (`debug.lowpri_throttle_enabled=0`) while a volume is
+  attached. It works, and it changes background I/O on every disk the Mac
+  has, through a `debug.` sysctl nobody promised to keep.
+
+**How to attack it next.**
+
+1. On a real Mac just after a reboot: the raw device of a blank attached
+   LUN under the framework (fine in the mild state); HFS+ (fine in the
+   mild state); ExFAT; a hypervisor under
+   `taskpolicy -d passive`. And trace where the framework's uncached writes
+   spend their time.
+2. Find the switch: a spindump of launchd's sync in each state, to see
+   whether it is sleeping in the throttle or not.
+3. DiskImages2 against `hdiutil` in the first ten minutes after a reboot,
+   one reboot each.
+
+Tools: `scripts/write-stall.py` (three writers, every call timed, what the
+others did meanwhile, a capture command when a write is stuck),
+`scripts/write-stall-mixed.py` (the same around the unchanged
+`mixed-load.py`), `scripts/write-stall-single.py` (one measured writer,
+appending or in place, aligned or not, against competitors),
+`scripts/write-stall-flusher.py` (the periodic volume flush) and
+`scripts/write-stall-raw.py` (writers on a raw device; destroys it),
+`scripts/raw-device-check.py` (what a hypervisor meets on the raw device)
+`scripts/write-stall-guest.py` (a guest's writes, under QEMU or the
+Virtualization framework) and `scripts/vz-guest.swift` (the framework
+runner it uses). `sudo
+spindump -notarget 3 10 -file …` is the capture that found it, since
+`sample` cannot see the kernel frames that matter, and `sudo fs_usage -w -f
+filesys launchd` times the syncs. A sync holds the newest file longest, so
+a script that times only its first writer sees nothing. And in zsh, a
+variable called `path` is `PATH`.
+
+## 22. Erasing an attached disk while the app is running gets it detached mid-erase (2026-11-22)
+
+Found by accident during item 21. `diskutil eraseDisk ExFAT … /dev/disk7` on
+a disk attached through `iscsictl nvme attach`, with the app running on the
+same account: the erase unmounts the volume, the app logs "after a Finder
+eject of /Volumes/FreshC: forcing the layers beneath it", unmounts the FSKit
+volume and logs out of the target, and `diskutil` then waits forever on a
+disk that is gone (ten minutes before it was killed). The app's own line
+that follows, "Detaching did not finish: /dev/disk7 is still attached", says
+it noticed something was off and carried on.
+
+The eject handler cannot tell a volume the user ejected from one that is
+being erased or repartitioned. Seen once, on 27.2.1 with build 57.4. Several
+erases the same day went through, all either with the app not running or
+within a minute of login.
+
+**Not known:** whether Disk Utility's Erase does the same as `diskutil`
+here, which is how a person would meet it; and whether the same happens to a
+disk the app attached itself, as opposed to one attached by `iscsictl`.
+
+**How to test.** Attach a scratch target in the app, then Erase it in Disk
+Utility and with `diskutil eraseDisk`, app running. Expect the erase to
+finish and the disk to stay attached.
+
 ## A note on method
 
 Four things were got wrong during this work and three had the same cause:

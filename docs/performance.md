@@ -328,3 +328,297 @@ volume.
 
 Lesson for the harness: `soak.py` should use per-process unique file names so a
 stray instance collides visibly rather than looking like corruption.
+
+## Data-path audit (2026-11-22)
+
+A read-through of FabricKit, iSCSIKit, NVMeKit, `InitiatorShared` and
+`iSCSIVolume` for algorithms, parallelism and vector work. What was changed,
+and where.
+
+### In this repository
+
+- **A write patches the cached chunk in place.** `PrefetchChunkCache.didWrite`
+  copied the whole 256 KiB entry for every write that touched it, under the
+  cache's lock, because the entry still held the bytes it was copying from. A
+  4 KiB write now costs 4 KiB. Small against a 2 ms FUA write; free to fix.
+- **The disk tier's GCM tag stays in memory.** It had a 4 KiB page of its own
+  after each chunk: a second `pread` and `pwrite` per chunk, and 4 KiB of disk
+  per slot. The slot table is in memory and dies with the session, exactly as
+  the tag on disk did.
+- **A read-modify-write reads from the cache when it can.** The read half
+  always went to the daemon. `PrefetchChunkCache.peek` answers it when every
+  byte is in memory, without waiting on a fetch in flight and without counting
+  as a read of the workload's. Safe under `ioLock`, where each acknowledged
+  write is already patched in.
+
+### In the kits (FabricKit, iSCSIKit and NVMeKit 0.1.1)
+
+- **The engines keep receiving while they answer an R2T.** Both read loops
+  sent the Data-Out (H2CData) themselves and waited for the transport to take
+  each PDU. Against a full send buffer that is as long as the network takes to
+  drain it, and nothing was received meanwhile: no Data-In, no status, no
+  window update for any other command. With the NAS's 64 KiB FirstBurstLength
+  every 256 KiB write goes through an R2T. The answer is now queued whole and
+  not waited for. Covered by a test per engine that holds the Data-Out in the
+  transport and requires a read that arrived behind the R2T to complete.
+- **Write data is not copied on its way to the socket.** Three to four copies
+  per byte on iSCSI, two to three on NVMe/TCP, are gone: the payload is a
+  slice of the caller's buffer down to `ConnectionTransport.send(contentsOf:)`,
+  which sends header and payload from separate buffers.
+- **One send per sequence**, not one per PDU: a command with its unsolicited
+  Data-Out, and each R2T's answer.
+- `NetworkTransport.receive` returns up to 1 MiB, from 256 KiB, and
+  `NVMeTCPDeframer` no longer allocates `lastHeader` for every PDU.
+
+Loopback, `iscsi-target-sim` built on the 0.1.0 kits as the target for both arms, `iscsictl`
+before and after, alternated, three runs each of 1 GiB in 1 MiB requests
+split into four 256 KiB commands (M1 Max, FirstBurstLength 64 KiB):
+
+| | before | after | |
+|---|---|---|---|
+| iSCSI write | 308 / 330 / 320 | 383 / 365 / 394 | **+19%** |
+| iSCSI write, FUA | 413 / 373 / 372 | 474 / 475 / 422 | **+18%** |
+| NVMe/TCP write | 245 / 268 / 245 | 279 / 275 / 284 | **+10%** |
+| NVMe/TCP write, FUA | 311 / 309 / 265 | 335 / 335 / 325 | **+12%** |
+| iSCSI read | 682 / 665 / 587 | 623 / 669 / 653 | none |
+| NVMe/TCP read | 417 / 488 / 449 | 483 / 408 / 478 | none |
+
+MB/s. The write arms do not overlap except iSCSI FUA, by one run. Reads were
+not expected to move and did not: the receive cap is not what bounds them
+here. These runs measure the copies and the per-PDU sends. They do not
+measure the R2T change, which needs reads and writes on one connection and
+which no bench here produces; that one rests on its tests until a mixed run
+against a real target says more. On the 1 GbE NAS none of this should show,
+for the reason this document opens with.
+
+### On the NAS, through the whole stack: no change, as predicted
+
+VM 26 (26.7.3), `name-testing` over NVMe/TCP, attached with `hdiutil`. A
+verified mixed load: three 512 MiB files per phase in 1 MiB calls, `F_NOCACHE`
+on reads and writes, every read checked against a SHA-256 of what was written.
+Build 57.1 is main before this work; 57.3 is this branch on the 0.1.1 kits.
+Two runs each, MiB/s:
+
+| phase | 57.1 | 57.3 |
+|---|---|---|
+| write alone, 3 streams | 36.7 / 37.2 | 37.1 / 36.8 |
+| read alone, 3 streams | 102.9 / 104.4 | 108.7 / 93.9 |
+| read 3 files while writing 3 | 60.3 / 63.6 | 63.3 / 59.7 |
+| read 6 files | 101.8 / 109.0 | 104.8 / 103.7 |
+
+Nothing moved outside run-to-run spread, and every read verified. Two earlier
+57.3 runs, taken while the NAS was busy with other work, read 10 to 25% slower
+and looked like a regression until these were taken back to back.
+
+**A write stall this load exposes, in both builds.** One `write()` of 1 MiB
+takes 10 to 19 s in most runs (57.1: 10.7, 17.5 and 16.3 s; 57.3: 16.2, 19.4,
+16.3, 17.5 and 10.6 s), always on one of three concurrent writers, while the
+extension logs no write or flush of a second or more and its longest write is
+about half a second. The time is spent above the extension, on the default
+`hdiutil` attach. Not explained.
+
+### The rest of the list (2026-11-22, later)
+
+Everything the first pass left alone, bar one item. The kits' part is
+FabricKit, iSCSIKit and NVMeKit 0.1.2.
+
+- **CRC32C runs three instruction chains at once**, folded with PMULL. The
+  instruction has a three-cycle latency, so one chain used a third of the
+  core. 4 KiB 7.5 → 19.6 GB/s, 64 KiB 7.1 → 21.3, 1 MiB 6.5 → 16.0; a
+  48-byte header is unchanged. It matters more than this document used to
+  say: digests are off for iSCSI on the NAS, but the daemon asks for them on
+  every NVMe/TCP controller and TrueNAS grants them.
+- **A byte read is copied once, not four times.** The deframers keep
+  received chunks as they came and hand a PDU over in steps: the header
+  first, then the data moved from those chunks straight into the buffer of
+  the read it answers. That buffer is one allocation for the whole read,
+  shared by the commands it is split into, not zeroed first, and returned as
+  `Data` without a copy.
+- **`NWConnection.send` copies a `Data` it is given**, whole, before it
+  returns: 256 MiB sent to a peer that was not reading grew the process by
+  256 MiB at once. Parts of 16 KiB and more now go as dispatch data that
+  refers to the caller's bytes, which grew it by nothing.
+- **Deadlines share one sleeping task.** `withDeadline` made a task per
+  command to sleep through the timeout. 5.2 → 2.7 µs per call; what is left
+  is the task the operation runs in, which is what lets a deadline hold over
+  work that ignores cancellation.
+- **Big- and little-endian fields are read in one load**, 12 → 6 ns for a
+  32-bit field, still trapping on an offset outside the buffer.
+- **A disk-tier lookup over several chunks reads and decrypts them at once.**
+- **NVMe/TCP can open several I/O queues** (`NVMeControllerConfig.
+  ioQueueCount`, `iscsictl nvme … --io-queues`, `NVME_IO_QUEUES` for the
+  daemon). One is still the default.
+
+**What a read costs the initiator.** Loopback, `iscsictl` on the 0.1.1 kits
+against this work, alternated, three runs each of 1 GiB; CPU seconds (user
+plus system) of the `iscsictl` process, which is far steadier here than
+throughput:
+
+| | 0.1.1 | now | |
+|---|---|---|---|
+| iSCSI read | 0.90 / 1.05 / 0.98 | 0.58 / 0.63 / 0.79 | **−36%** |
+| iSCSI read, digests | 1.03 / 1.16 / 1.17 | 0.60 / 0.63 / 0.71 | **−46%** |
+| NVMe/TCP read, digests | 1.40 / 1.29 / 1.39 | 0.84 / 0.91 / 0.83 | **−40%** |
+| NVMe/TCP read | 1.24 / 1.41 / 1.44 | 0.80 / 0.91 / 0.85 | **−40%** |
+| iSCSI write (six runs, mean) | 1.01 | 0.95 | −6% |
+| NVMe/TCP write (six runs, mean) | 1.24 | 1.21 | −2% |
+
+Peak memory of the reading process fell from 22–25 MiB to 15–17. Writes are
+two thirds system time, the kernel's own copy into the socket, which nothing
+here touches. Throughput on the same runs moved the same way for reads
+(iSCSI with digests: median 602 → 814 MB/s over five runs) but the ranges
+overlap for most shapes: this machine was running two VMs, and the simulator
+is the slower end of the pipe.
+
+**Several I/O queues, loopback.** Median of four runs, MB/s:
+
+| | 1 queue | 2 | 4 |
+|---|---|---|---|
+| read, 1 MiB, depth 4 | 816 | 980 | 1045 |
+| read, 64 KiB, depth 8 | 565 | 533 | 558 |
+| read, 4 KiB, depth 32 | 71 | 80 | 81 |
+| write, 1 MiB, depth 4 | 468 | 608 | 611 |
+| write, 4 KiB, depth 32 | 78 | 89 | 80 |
+
+A fifth to a third more on megabyte transfers, a tenth on 4 KiB, nothing at
+64 KiB, and little past two. The simulator's disk is one actor, so this
+understates a target that serves queues independently and says nothing about
+one whose readahead dislikes a sequential read arriving on several
+connections.
+
+**Several I/O queues, on the NAS: no gain, so the default stays at one.**
+VM 26 (two cores), `iscsictl nvme read-bench` from build 57.4's bundle
+against `name-testing`, CRC32C digests on, four alternated runs; median MB/s
+and CPU seconds of the tool:
+
+| | 1 queue | 2 | 4 |
+|---|---|---|---|
+| 1 MiB, depth 1 | 219, 1.28 s | 224, 1.54 s | 218, 1.64 s |
+| 1 MiB, depth 4 | 299, 1.20 s | 325, 1.41 s | 271, 1.69 s |
+| 64 KiB, depth 8 | 229, 1.03 s | 221, 1.14 s | 206, 1.28 s |
+| 4 KiB, depth 32 | 71, 0.92 s | 66, 0.92 s | 61, 0.98 s |
+
+Two queues are inside the noise of one and cost more CPU; four are a little
+slower at every size. This rig is bound by the VM's network path at about
+300 MB/s and has two cores, so there is nothing for a second receive loop to
+unlock. A host with a faster link and more cores is where to ask again.
+
+**The same reads, 0.1.1 engine against 0.1.2, on the NAS.** Three alternated
+runs, one queue; throughput did not move (1 MiB at depth 1: 169 / 217 / 205
+against 216 / 221 / 198 MB/s), which is the link. CPU seconds for the same
+work did:
+
+| | 0.1.1 | 0.1.2 |
+|---|---|---|
+| 1 GiB in 1 MiB requests, depth 1 | 2.04 / 1.78 / 2.26 | 1.13 / 1.36 / 1.63 |
+| 1 GiB in 1 MiB requests, depth 4 | 1.89 / 1.62 / 2.15 | 1.10 / 1.47 / 1.57 |
+| 512 MiB in 64 KiB requests, depth 8 | 1.45 / 1.43 / 2.01 | 0.89 / 1.25 / 1.19 |
+| 64 MiB in 4 KiB requests, depth 8 | 1.49 / 1.56 / 2.00 | 1.14 / 1.35 / 1.06 |
+
+About a third less at a megabyte, a fifth to a quarter below. The 0.1.1
+binary is a SwiftPM build and the 0.1.2 one is Xcode's from the bundle, which
+is a difference this table cannot separate from the engines'.
+
+**Through the whole stack, build 57.4.** The mixed load of the section above
+(`scripts/mixed-load.py /Volumes/name-testing 512 3`), a throwaway run and
+then two, MiB/s:
+
+| phase | 57.1 and 57.3, earlier the same day | 57.4 |
+|---|---|---|
+| write alone | 36.7 / 37.2 / 37.1 / 36.8 | 50.2 / 41.1 (throwaway 43.4) |
+| read alone | 102.9 / 104.4 / 108.7 / 93.9 | 107.0 / 105.1 |
+| read 3 files while writing 3 | 60.3 / 63.6 / 63.3 / 59.7 | 69.0 / 68.5 |
+| read 6 files | 101.8 / 109.0 / 104.8 / 103.7 | 101.6 / 96.9 |
+
+Every read verified, no slow-I/O or recovery lines. Reads are where they
+were. Writes are 11 to 35% up and the mixed phase 8 to 15%, with every 57.4
+run above every earlier one; that would fit NVMe/TCP writes carrying a data
+digest that is now three times cheaper to compute, on a two-core VM. But the
+two columns were taken two hours apart with the NAS busy in between, and
+that kind of gap has misled this document once today already. Not claimed
+until the builds are run back to back. The write stall of item 21 in
+`open-questions.md` is still there: 11.5, 8.0, 16.4 and 16.7 s.
+
+**Checked on the NAS, lightly.** From VM 26, read-only: four 8 MiB ranges of
+`name-testing` holding real data (58 to 96% non-zero) read with the 0.1.1
+engine and with this one, on one, two, three and four queues (TrueNAS
+granted four), with CRC32C digests and without, in 64 KiB, 256 KiB and 1 MiB
+commands, up to eight requests at once. Every SHA-256 matched. Both fuzz
+harnesses now take each input through the stepwise deframers as well and
+require them to agree with `next()`: 1.6 and 1.2 million inputs under ASan,
+no crashes.
+
+### The same suite with four cores, on both VMs (2026-11-22, afternoon)
+
+Both test VMs were raised from two cores to four and run one at a time:
+VM 26 (26.7.3) and VM 27 (27.2.1), build 57.4, `name-testing` write-through
+on both. VM 27 had it saved with a 5 s periodic flush until this run, which
+is why its earlier numbers are not in this table.
+
+Mixed load, after a throwaway run, MiB/s:
+
+| phase | VM 26, 2 cores | VM 26, 4 cores | VM 27, 4 cores |
+|---|---|---|---|
+| write alone | 50.2 / 41.1 | 39.7 / 34.2 | 43.0 / 46.1 |
+| read alone | 107.0 / 105.1 | 98.4 / 89.4 | 80.2 / 132.6 |
+| read 3 files while writing 3 | 69.0 / 68.5 | 57.9 / 63.1 | 55.3 / 72.8 |
+| read 6 files | 101.6 / 96.9 | 100.8 / 98.9 | 137.9 / 144.1 |
+
+Every read verified. Two more cores bought nothing on VM 26, and its
+write-alone figure moved from 34 to 50 across four runs of one build an hour
+apart. So the "57.4 writes faster than 57.1" reading above is withdrawn:
+that spread is the NAS, and it is wider than the difference it was read
+from.
+
+Raw reads, 0.1.1 engine against 0.1.2, one queue, median of three alternated
+runs, MB/s with the tool's CPU seconds:
+
+| | VM 26: 0.1.1 | 0.1.2 | VM 27: 0.1.1 | 0.1.2 |
+|---|---|---|---|---|
+| 1 MiB, depth 1 | 154, 2.47 s | 161, 2.17 s | 320, 2.29 s | 340, 1.73 s |
+| 1 MiB, depth 4 | 222, 2.99 s | 229, 1.97 s | 505, 2.10 s | 484, 1.70 s |
+| 64 KiB, depth 8 | 155, 2.41 s | 185, 1.52 s | 383, 1.82 s | 402, 1.33 s |
+| 4 KiB, depth 32 | 39, 1.85 s | 47, 1.16 s | 94, 1.54 s | 125, 1.17 s |
+
+(VM 27's 64 KiB row is eight alternated runs: the first three had the new
+engine 10% behind, and the longer run did not.) Throughput at a megabyte is
+the link, on both. **Small reads are where the new engine is faster on a
+real target**: 4 KiB at depth 32 is 20% up on VM 26 and 33% up on VM 27,
+with the ranges apart on VM 27 (87 to 101 against 122 to 131). CPU for the
+same work is 12 to 37% lower everywhere. The same eight runs included a
+SwiftPM build of the 0.1.2 engine beside Xcode's from the bundle: 393 MB/s
+and 1.37 s against 402 and 1.33, so the build system is not what the tables
+above are measuring.
+
+I/O queues with four cores, median of four alternated runs, MB/s:
+
+| | VM 26: 1 queue | 2 | 4 | VM 27: 1 queue | 2 | 4 |
+|---|---|---|---|---|---|---|
+| 1 MiB, depth 1 | 173 | 158 | 171 | 333 | 327 | 338 |
+| 1 MiB, depth 4 | 226 | 221 | 232 | 490 | 480 | 472 |
+| 64 KiB, depth 8 | 173 | 165 | 175 | 321 | 351 | 318 |
+| 4 KiB, depth 32 | 61 | 52 | 55 | 128 | 102 | 124 |
+
+Still nothing, with the cores to use them and on the faster of the two
+links, and each extra queue costs CPU (VM 27, 1 MiB at depth 4: 1.75, 2.19
+and 2.55 s). One queue stays the default, and against this NAS there is no
+case for the knob.
+
+Two things about method that cost time here. A benchmark started with
+`nohup` over ssh loses the local network when the session closes: every
+connect from it then times out, which looked like a dead target. File-level
+load survives being detached; anything that opens a socket has to run in a
+live session. And a mixed-load run on VM 27, while it still had the 5 s
+flush, slowed to 1 to 2 s per megabyte written for six minutes, with the
+daemon idle and a second connection from the old engine reading at 31 MB/s;
+both recovered when the load was stopped. Not explained, and not seen again
+once the target was write-through.
+
+### Left alone
+
+- **Waking every CmdSN-window waiter on each window update.** Waking only as
+  many as the window opened is not a safe trade at these depths: a woken
+  waiter that turns out to be cancelled would strand the ones behind it.
+- **The task `withDeadline` runs the operation in**, and the task per send
+  that keeps iSCSI's PDUs in CmdSN order. Both are what make a stuck
+  operation survivable.

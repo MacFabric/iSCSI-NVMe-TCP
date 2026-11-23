@@ -111,16 +111,23 @@ public actor DaemonCore {
     /// or the target was slow. A FreeBSD guest panicked when a disk command
     /// took over 10 s on a DiskImages2 volume (docs/open-questions.md item 17).
     private let slowOperationThreshold: Duration
+    /// I/O queues asked of each NVMe/TCP controller. One, unless whoever
+    /// starts the daemon says otherwise: more are a connection and a receive
+    /// loop each, and whether they help depends on the target and the link
+    /// (docs/performance.md).
+    private let nvmeIOQueueCount: Int
 
     public init(
         initiatorName: String,
         policy: SessionPolicy = SessionPolicy(),
         hostIdentity: NVMeHostIdentity? = nil,
+        nvmeIOQueueCount: Int = 1,
         slowOperationThreshold: Duration = .seconds(1),
         unitClaimWait: Duration = .seconds(10),
         transportFactory: @escaping @Sendable (String, UInt16, InterfaceBinding?) async throws -> any ConnectionTransport
     ) {
         self.slowOperationThreshold = slowOperationThreshold
+        self.nvmeIOQueueCount = max(1, nvmeIOQueueCount)
         self.unitClaimWait = unitClaimWait
         self.initiatorName = initiatorName
         self.hostIdentity = hostIdentity ?? HostIdentity.nvmeHost()
@@ -375,6 +382,7 @@ public actor DaemonCore {
         }
         var config = NVMeControllerConfig(host: hostIdentity, subsystemNQN: subsystemNQN)
         config.requestDigests = true
+        config.ioQueueCount = nvmeIOQueueCount
         let factory = transportFactory
         let controller = NVMeController(config: config, policy: policy) {
             path.record(try await factory(host, port, binding))

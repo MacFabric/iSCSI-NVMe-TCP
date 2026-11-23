@@ -35,8 +35,8 @@ let package = Package(
         // The protocol engines. Up to the next minor, because before 1.0 a
         // minor release may break API; Package.resolved pins the exact
         // version, and apps/project.yml must name the same one (CLAUDE.md).
-        .package(url: "https://github.com/MacFabric/iSCSIKit", .upToNextMinor(from: "0.1.0")),
-        .package(url: "https://github.com/MacFabric/NVMeKit", .upToNextMinor(from: "0.1.0")),
+        .package(url: "https://github.com/MacFabric/iSCSIKit", .upToNextMinor(from: "0.1.2")),
+        .package(url: "https://github.com/MacFabric/NVMeKit", .upToNextMinor(from: "0.1.2")),
     ],
     targets: [
         // Everything the app, the daemon, the FSKit extension and iscsictl

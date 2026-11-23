@@ -1,13 +1,13 @@
 {
-  "originHash" : "d7e196dc64737b4ca113ed0d30d2bf2931f2c38265cf4ebef3c39afd21b30182",
+  "originHash" : "67f51aed2d05fdd4b0798c4f6d87b2540b9cfc9ed29d3975ef01bdf5ff7261f1",
   "pins" : [
     {
       "identity" : "fabrickit",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/MacFabric/FabricKit",
       "state" : {
-        "revision" : "412e45a55c4dd248cb4479aa50b05381d64a97b4",
-        "version" : "0.1.0"
+        "revision" : "6b5a7b1f347698aa91b14654495f1a4383163da7",
+        "version" : "0.1.2"
       }
     },
     {
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/MacFabric/iSCSIKit",
       "state" : {
-        "revision" : "4e02b9810c7241864f3aec1c35a4e6059bc2d734",
-        "version" : "0.1.0"
+        "revision" : "1b7d5901654e16e7b541e04b77d65c81d859ffa2",
+        "version" : "0.1.2"
       }
     },
     {
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/MacFabric/NVMeKit",
       "state" : {
-        "revision" : "d09daac70407b469e2e24c1439dceca5c7039a19",
-        "version" : "0.1.0"
+        "revision" : "43f7d2eb7d2fc203420eb57816b9cfb70b7a3990",
+        "version" : "0.1.2"
       }
     },
     {

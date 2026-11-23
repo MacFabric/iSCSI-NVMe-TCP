@@ -199,6 +199,31 @@ struct DaemonStoreTests {
         }
     }
 
+    /// The read half of a read-modify-write is the store's own. When the
+    /// block is already in memory it is as current as the device, because
+    /// every acknowledged write was patched in under the same lock.
+    @Test func aPartialWriteToACachedBlockReadsNothingFromTheDevice() throws {
+        let (store, daemon) = makeStore()
+        let original = Data((0 ..< 4096).map { UInt8(($0 &* 7) & 0xFF) })
+        _ = try store.write(original, at: 4096)
+        _ = try read(store, at: 4096, length: 4096)       // populate the cache
+        let readsBefore = daemon.log.filter { $0.kind == "read" }.count
+
+        let first = Data(repeating: 0xEE, count: 512)
+        _ = try store.write(first, at: 4096 + 1024)
+        // A second one over the first: it must build on the patched bytes.
+        let second = Data(repeating: 0x11, count: 512)
+        _ = try store.write(second, at: 4096 + 1280)
+
+        #expect(daemon.log.filter { $0.kind == "read" }.count == readsBefore,
+                "a cached block was fetched again for a read-modify-write")
+        var expected = original
+        expected.replaceSubrange(1024 ..< 1536, with: first)
+        expected.replaceSubrange(1280 ..< 1792, with: second)
+        #expect(daemon.contents(at: 4096, length: 4096) == expected)
+        #expect(try read(store, at: 4096, length: 4096) == expected)
+    }
+
     /// Writes patch the cached chunks rather than dropping them. A guest's
     /// journal is written and re-read thousands of times per boot; invalidating
     /// on write would turn each of those into a 256 KiB refetch.

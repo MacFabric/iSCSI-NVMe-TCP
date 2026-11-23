@@ -29,7 +29,7 @@ struct DiskTierDataPathTests {
         let daemon = FakeDaemon(byteCount: Self.capacity)
         let file = MemoryChunkFile()
         let spills = DispatchQueue(label: "test.spill")
-        let tier = DiskChunkTier(file: file, budgetBytes: 64 * (Self.chunk + DiskChunkTier.tagRoom),
+        let tier = DiskChunkTier(file: file, budgetBytes: 64 * Self.chunk,
                                  chunkBytes: Self.chunk, spillQueue: spills)
         let store = DaemonStore(daemon: daemon, session: "s1", blockSize: Self.blockSize,
                                 byteCount: UInt64(Self.capacity),

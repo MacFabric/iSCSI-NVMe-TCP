@@ -111,13 +111,31 @@ public final class PrefetchChunkCache: @unchecked Sendable {
             cond.unlock()
         }
 
-        /// Swap a ready chunk's bytes for a patched copy (write-through).
-        /// A no-op in any other state: pending and failed entries are dropped
-        /// by the caller instead, because there is nothing valid to patch.
-        func replaceReady(_ data: Data) {
-            cond.lock()
-            if case .ready = state { state = .ready(data) }
-            cond.unlock()
+        /// Overwrite `range` of a ready chunk's bytes, counted from the
+        /// entry's first byte, with `bytes` (write-through). False, and
+        /// nothing done, in any other state: the caller drops pending and
+        /// failed entries instead, because there is nothing valid to patch.
+        ///
+        /// In place: `state` gives up its reference before the bytes are
+        /// touched, so a 4 KiB write costs 4 KiB and not a copy of the whole
+        /// chunk. A reader still holding the old bytes keeps them — then, and
+        /// only then, the mutation copies.
+        func patchReady(_ range: Range<Int>, with bytes: Data) -> Bool {
+            cond.lock(); defer { cond.unlock() }
+            guard case .ready(var data) = state else { return false }
+            state = .failed
+            data.replaceSubrange(data.startIndex + range.lowerBound ..< data.startIndex + range.upperBound,
+                                 with: bytes)
+            state = .ready(data)
+            return true
+        }
+
+        /// Whether the entry holds bytes. Unlike `snapshot` it takes no
+        /// reference to them, which would make the next patch copy.
+        var isReady: Bool {
+            cond.lock(); defer { cond.unlock() }
+            if case .ready = state { return true }
+            return false
         }
 
         var snapshot: State {
@@ -366,6 +384,34 @@ public final class PrefetchChunkCache: @unchecked Sendable {
         return data.subdata(in: skip ..< skip + count)
     }
 
+    /// `[offset, offset+length)` if every byte of it is in memory right now,
+    /// nil otherwise. Never fetches, never waits on a fetch in flight, and
+    /// leaves the read stream's bookkeeping alone: no hit or miss counted, no
+    /// recency, no speculation, nothing for the read-around controller.
+    ///
+    /// For a read-modify-write, whose read is the store's own and not the
+    /// workload's. Its caller holds the lock that orders `didWrite` against
+    /// the device, so every acknowledged write is already patched in and the
+    /// bytes are as current as a fetch would be.
+    public func peek(offset: UInt64, length: Int) -> Data? {
+        guard length > 0, offset < capacity,
+              UInt64(length) <= capacity - offset else { return nil }
+        let chunk = UInt64(chunkBytes)
+        let end = offset &+ UInt64(length)
+        var parts: [(start: UInt64, data: Data)] = []
+        lock.lock()
+        defer { lock.unlock() }
+        var co = (offset / chunk) * chunk
+        while co < end {
+            guard let e = map[co],
+                  e.covers(Int(max(offset, co) - co), Int(min(end, co &+ chunk) - co)),
+                  case .ready(let data) = e.snapshot else { return nil }
+            parts.append((co &+ UInt64(e.lo), data))
+            co += chunk
+        }
+        return Self.assemble(parts, offset: offset, count: length)
+    }
+
     /// Keep freshly fetched bytes `piece`, which start `lo` bytes into the
     /// chunk at `key`. A ready entry they overlap or touch is merged with
     /// them into one, so read-around that grows a run keeps all of it. A
@@ -432,24 +478,24 @@ public final class PrefetchChunkCache: @unchecked Sendable {
         if !data.isEmpty {
             let end = offset &+ UInt64(data.count)
             forEachOverlappingChunkLocked(offset: offset, length: data.count) { co, e in
-                switch e.snapshot {
-                case .ready(let old):
-                    let entryStart = co &+ UInt64(e.lo)
-                    let entryEnd = entryStart &+ UInt64(old.count)
-                    let isectStart = max(offset, entryStart)
-                    let isectEnd = min(end, entryEnd)
-                    guard isectStart < isectEnd else { return }
-                    var patched = old
-                    patched.replaceSubrange(
-                        Int(isectStart - entryStart) ..< Int(isectEnd - entryStart),
-                        with: data.subdata(in: Int(isectStart - offset) ..< Int(isectEnd - offset)))
-                    e.replaceReady(patched)
-                case .pending, .failed:
-                    // Speculation issued between willWrite and now raced the
-                    // write on the wire; if it has not resolved to usable
-                    // bytes yet, its era is unknowable. Drop it.
-                    removeLocked(co)
+                // A ready entry's bytes are exactly `length` long: a miss
+                // sets one from the other, and a speculative reply of any
+                // other size is filled as failed.
+                let entryStart = co &+ UInt64(e.lo)
+                let isectStart = max(offset, entryStart)
+                let isectEnd = min(end, entryStart &+ UInt64(e.length))
+                let ready: Bool
+                if isectStart < isectEnd {
+                    let from = data.startIndex + Int(isectStart - offset)
+                    ready = e.patchReady(Int(isectStart - entryStart) ..< Int(isectEnd - entryStart),
+                                         with: data[from ..< from + Int(isectEnd - isectStart)])
+                } else {
+                    ready = e.isReady
                 }
+                // Speculation issued between willWrite and now raced the
+                // write on the wire; if it has not resolved to usable bytes
+                // yet, its era is unknowable. Drop it.
+                if !ready { removeLocked(co) }
             }
         }
         lock.unlock()
