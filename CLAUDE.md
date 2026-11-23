@@ -102,7 +102,7 @@ swift run iscsictl nvme discover 127.0.0.1
 swift run iscsictl nvme verify 127.0.0.1 --subsystem nqn.2026-08.me.herko.sim:disk0 --write  # DESTRUCTIVE
 ```
 
-Against the NAS (TrueNAS SCALE 25.10, `nvmet` on 4420), `iscsictl nvme
+Against the NAS (TrueNAS 27, `nvmet` on 4420), `iscsictl nvme
 discover 192.168.20.1` is read-only; `verify --write` is not. The host NQN
 both commands print is what goes in the subsystem's allowed-hosts list.
 

@@ -110,7 +110,7 @@ over WiFi, or a VPN, or Tailscale, etc.** Caveat emptor.
 
 One of the big use cases for me is hosting VMs. APFS over the network is a terrible, terrible choice for 
 that. APFS can buffer writes and then try to sync them in a low-priority thread every 30 seconds, resulting
-sometimes in gigabytes of writes at once, with the VM's drive locked until they complete. This is enough to 
+sometimes in a large backlog of writes at once, with the VM's drive locked until they complete. This is enough to 
 crash some guests.
 
 Some virtualization frameworks can use raw devices instead of files in a filesystem; QEMU can, and Apple's
