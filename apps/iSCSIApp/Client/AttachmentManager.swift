@@ -50,8 +50,21 @@ struct Attachment: Identifiable, Equatable, Sendable {
     /// disk that is neither blank nor unreadable mounted nothing. Asked only
     /// when nothing mounted (`LockedAPFSVolumes`).
     var lockedVolumes: [String] = []
+    /// Attached as a raw device (`TargetRecord.attachAsRawDevice`): the
+    /// device is the whole of it, and nothing was mounted on purpose.
+    var isRawDevice: Bool = false
+    /// Which engine serves the device, as `hdiutil info` reports it; nil
+    /// while there is no device.
+    var engine: ImageAttachEngine? = nil
 
-    var isFullyAttached: Bool { device != nil && !volumePaths.isEmpty }
+    /// Up as far as it was meant to go: a mounted volume, or for a raw
+    /// device, the device.
+    var isFullyAttached: Bool { device != nil && (isRawDevice || !volumePaths.isEmpty) }
+    /// The device's character node, which is what a hypervisor opens:
+    /// `/dev/rdiskN` for `/dev/diskN`.
+    var rawDeviceNode: String? {
+        device.map { $0.replacingOccurrences(of: "/dev/disk", with: "/dev/rdisk") }
+    }
     /// Mounted by this app, but no record derives its mount point any more:
     /// the target was edited while attached, or removed. `reconcile` finds
     /// these so they can still be detached.
@@ -191,7 +204,10 @@ final class AttachmentManager: ObservableObject {
 
     /// A volume we put there has gone. Take down what is left underneath it.
     private func volumeDisappeared(at path: String) {
-        guard let orphan = attachments.first(where: { $0.volumePaths.contains(path) })
+        // A raw device's volumes, if someone mounted one by hand, are not
+        // what this app attached, and unmounting one is no eject of the disk.
+        guard let orphan = attachments.first(where: { $0.volumePaths.contains(path) }),
+              !orphan.isRawDevice
         else { return }
         Task {
             // detach() tolerates layers already gone, so one path handles both
@@ -245,7 +261,11 @@ final class AttachmentManager: ObservableObject {
         // Decided before the FSKit mount, because the volume serves the two
         // engines differently (`VolumeIOOptions`) and its mount URL is the only
         // way it can learn which one is coming.
-        let engine = ImageAttachEngine.choose(
+        // A raw device always goes through `hdiutil`: DiskImages2 holds single
+        // requests for seconds under a VM's load (issue #4), and a VM is what
+        // a raw device is for.
+        let raw = !target.mountsVolumes
+        let engine: ImageAttachEngine = raw ? .hdiutil : ImageAttachEngine.choose(
             osMajor: ProcessInfo.processInfo.operatingSystemVersion.majorVersion,
             override: UserDefaults.standard.string(forKey: ImageAttachEngine.preferenceKey))
         var components = URLComponents(url: base, resolvingAgainstBaseURL: false)
@@ -302,6 +322,8 @@ final class AttachmentManager: ObservableObject {
 
             switch ImageAttachPlan.decide(fskitWasMounted: fskitWasMounted,
                                           existingDevice: Self.attachedDevice(forImage: imagePath)) {
+            case .reuse(let existing) where raw:
+                return (existing, Self.mountPoints(ofDevice: existing), nil, [])
             case .reuse(let existing):
                 let volumes = Self.mountPoints(ofDevice: existing)
                 Self.disableAccessTimes(on: volumes)
@@ -320,6 +342,14 @@ final class AttachmentManager: ObservableObject {
             // partitioned at 4096; see PartitionTableProbe. Every other disk
             // gets the default.
             let (blockSize, isBlank, holdsAPFS) = Self.attachBlockSize(image: imagePath, volume: hiddenPath)
+
+            // Nothing mounted, so nothing to unlock and no access times to
+            // turn off: whatever is on the disk belongs to its user.
+            if raw {
+                let device = try Self.attachRawDevice(image: imagePath, blockSize: blockSize)
+                attachLog.log("attached \(device, privacy: .public) as a raw device, nothing mounted")
+                return (device, [], isBlank, [])
+            }
 
             // A disk with locked volumes stays attached without mounting, so
             // nothing asks for a password the attach could not use; its saved
@@ -351,13 +381,16 @@ final class AttachmentManager: ObservableObject {
             let after = Self.unlockSavedVolumes(device: result.device, volumes: result.volumes)
             return (result.device, after.volumes, isBlank, after.locked)
         }.value
+        let served = probe.device == nil ? nil
+            : await Task.detached { Self.attachedEngine(forImage: imagePath) }.value
 
         // Recorded before anything else can go wrong: throwing after the
         // layers are up leaves them mounted but invisible — not listed, not
         // detachable.
         let attachment = Attachment(tag: tag, targetID: targetID, hiddenPath: hiddenPath,
                                     device: probe.device, volumePaths: probe.volumes,
-                                    isBlank: probe.isBlank, lockedVolumes: probe.locked)
+                                    isBlank: probe.isBlank, lockedVolumes: probe.locked,
+                                    isRawDevice: raw, engine: served)
         attachments.removeAll { $0.tag == tag }
         attachments.append(attachment)
         attachmentsGeneration &+= 1
@@ -477,6 +510,7 @@ final class AttachmentManager: ObservableObject {
         struct Candidate: Sendable {
             let tag: String, targetID: String, hiddenPath: String, imagePath: String
             var source: String? = nil
+            var isRawDevice = false
         }
         var recordMountPoints: Set<String> = []
         var candidates: [Candidate] = targets.compactMap { target in
@@ -487,7 +521,8 @@ final class AttachmentManager: ObservableObject {
             recordMountPoints.insert(hidden.path)
             guard Self.isMounted(hidden.path) else { return nil }
             return Candidate(tag: tag, targetID: target.id, hiddenPath: hidden.path,
-                             imagePath: hidden.appendingPathComponent("lun0.img").path)
+                             imagePath: hidden.appendingPathComponent("lun0.img").path,
+                             isRawDevice: !target.mountsVolumes)
         }
         // Orphans: this app's FSKit mounts that no record derives any more —
         // the target was edited while attached (its tag hashes the address,
@@ -512,7 +547,10 @@ final class AttachmentManager: ObservableObject {
                     hiddenPath: candidate.hiddenPath, device: device,
                     volumePaths: volumes,
                     mountSource: candidate.source,
-                    lockedVolumes: Self.lockedVolumes(device: device, ifNoneOf: volumes))
+                    lockedVolumes: candidate.isRawDevice
+                        ? [] : Self.lockedVolumes(device: device, ifNoneOf: volumes),
+                    isRawDevice: candidate.isRawDevice,
+                    engine: device == nil ? nil : Self.attachedEngine(forImage: candidate.imagePath))
             }
         }.value
         // Someone mutated the list while we were probing (a detach, an attach,
@@ -590,6 +628,22 @@ final class AttachmentManager: ObservableObject {
         // Never attach the same image twice: if this one will not go, it is
         // the attach, with nothing mounted.
         attachLog.error("could not detach \(device, privacy: .public) after looking for locked volumes; keeping it, unmounted")
+        return device
+    }
+
+    /// A raw device: attached with `-nomount`, so DiskArbitration mounts
+    /// nothing and wakes nothing, whatever the disk holds. `hdiutil` gives the
+    /// device nodes to the account that attached, so a hypervisor running as
+    /// that account opens `/dev/rdiskN` without root.
+    nonisolated private static func attachRawDevice(image: String, blockSize: Int?) throws -> String {
+        var arguments = ["attach", "-imagekey", "diskimage-class=CRawDiskImage", "-noverify",
+                         "-plist", "-nomount"]
+        if let blockSize { arguments += ["-blocksize", String(blockSize)] }
+        arguments.append(image)
+        let result = try run("/usr/bin/hdiutil", arguments)
+        guard result.status == 0, let device = parseAttachPlist(result.stdout).device else {
+            throw AttachmentError.imageAttachFailed(result.combined)
+        }
         return device
     }
 
@@ -819,6 +873,19 @@ final class AttachmentManager: ObservableObject {
         return nil
     }
 
+    /// Which engine serves the image, from the same `hdiutil info`, which
+    /// lists DiskImages2's images too. nil when the image is not attached.
+    nonisolated private static func attachedEngine(forImage path: String) -> ImageAttachEngine? {
+        guard let result = try? run("/usr/bin/hdiutil", ["info", "-plist"]),
+              result.status == 0,
+              let plist = try? PropertyListSerialization.propertyList(
+                from: result.stdout, format: nil) as? [String: Any],
+              let images = plist["images"] as? [[String: Any]],
+              let image = images.first(where: { $0["image-path"] as? String == path })
+        else { return nil }
+        return ImageAttachEngine.serving(hdiutilInfoImage: image)
+    }
+
     /// Where a device's filesystems are mounted. Asks hdiutil, not
     /// `mount | grep`: APFS mounts a *synthesized* container under a different
     /// disk number, so device-number matching reports healthy volumes as
@@ -915,6 +982,7 @@ protocol TargetRecordView {
     var port: UInt16 { get }
     var targetIQN: String { get }
     var lun: UInt64 { get }
+    var mountsVolumes: Bool { get }
 }
 
 extension TargetRecord: TargetRecordView {}

@@ -89,13 +89,18 @@ public struct TargetRecord: Codable, Sendable, Equatable, Identifiable {
     /// Local disk cache size in GB (GiB), 1…16, used only while attached.
     /// nil — and any other value — is off. See `DiskChunkTier`.
     public var localCacheGB: Int?
+    /// Attach as a raw device: `/dev/diskN` only, with nothing on it mounted
+    /// on this Mac, for a virtual machine or a tool that uses the disk
+    /// directly. nil (what every earlier record decodes as) and false mount
+    /// its volumes as before. See `mountsVolumes`.
+    public var attachAsRawDevice: Bool?
 
     public init(id: String, displayName: String, host: String, port: UInt16 = 3260,
                 targetIQN: String, lun: UInt64 = 0, chapUser: String? = nil,
                 mutualChapUser: String? = nil, autoAttach: Bool = false,
                 flushIntervalSeconds: Int? = nil,
                 networkInterface: String? = nil, interfaceFallback: Bool? = nil,
-                localCacheGB: Int? = nil) {
+                localCacheGB: Int? = nil, attachAsRawDevice: Bool? = nil) {
         self.id = id
         self.displayName = displayName
         self.host = host
@@ -109,7 +114,11 @@ public struct TargetRecord: Codable, Sendable, Equatable, Identifiable {
         self.networkInterface = networkInterface
         self.interfaceFallback = interfaceFallback
         self.localCacheGB = localCacheGB
+        self.attachAsRawDevice = attachAsRawDevice
     }
+
+    /// Whether an attach mounts the disk's volumes. Derived, never stored.
+    public var mountsVolumes: Bool { attachAsRawDevice != true }
 
     /// Derived from the name, never stored.
     public var isNVMe: Bool { IQN.isNQN(targetIQN) }

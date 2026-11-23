@@ -116,7 +116,9 @@ private struct MenuRow: View {
             if row.isBusy {
                 ProgressView().controlSize(.small)
             } else if row.isAttached {
-                Button(String(localized: "Show")) { model.reveal(row) }.buttonStyle(.link)
+                if row.volumePath != nil {
+                    Button(String(localized: "Show")) { model.reveal(row) }.buttonStyle(.link)
+                }
                 Button(String(localized: "Eject")) { Task { await model.detach(row.target, ejectingMounted: true) } }
                     .buttonStyle(.borderless)
             } else {

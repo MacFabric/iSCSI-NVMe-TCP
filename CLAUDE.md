@@ -102,7 +102,7 @@ swift run iscsictl nvme discover 127.0.0.1
 swift run iscsictl nvme verify 127.0.0.1 --subsystem nqn.2026-08.me.herko.sim:disk0 --write  # DESTRUCTIVE
 ```
 
-Against the NAS (TrueNAS SCALE 25.10, `nvmet` on 4420), `iscsictl nvme
+Against the NAS (TrueNAS 27, `nvmet` on 4420), `iscsictl nvme
 discover 192.168.20.1` is read-only; `verify --write` is not. The host NQN
 both commands print is what goes in the subsystem's allowed-hosts list.
 
@@ -257,6 +257,13 @@ LUN ──► shared-memory ring ──► iSCSIDext virtual SCSI HBA       (Bac
 - **The attach path is unprivileged and lives in the app, not the daemon.**
   `mount -F` resolves the FSKit module through the user's `fskit_agent`; a root
   daemon's lookup goes to `fskitd`, which holds no third-party modules.
+- **A target can be attached as a raw device** (`TargetRecord.attachAsRawDevice`,
+  optional like every key added since 0.3.9): `hdiutil attach -nomount`
+  whatever the disk holds, always `hdiutil` and never DiskImages2, no unlock
+  and no `noatime` remount. It is for virtual machines, which open
+  `/dev/rdiskN` as the attaching account without root. The eject handler
+  ignores it, since nothing it mounted can be ejected, and `hdiutil detach`
+  refuses while a guest holds the device open.
 - **Writes default to Force Unit Access.** FSKit delivers no barrier signal, and
   an acknowledged write in a volatile target cache is a lie APFS acts on. Per
   target this can be relaxed to a 1–60 s timer or never; the interval bounds how

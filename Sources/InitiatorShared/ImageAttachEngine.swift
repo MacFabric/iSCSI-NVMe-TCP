@@ -46,6 +46,23 @@ public enum ImageAttachEngine: String, Sendable, Equatable {
     /// which engine attached it any other way.
     public static let mountQuery = URLQueryItem(name: "engine", value: ImageAttachEngine.diskImages2.rawValue)
 
+    /// Which engine serves an attached image, from its entry in `hdiutil info
+    /// -plist`, which lists both engines' images and flags DiskImages2's with
+    /// `diskimages2`. Asked rather than remembered: a DiskImages2 attach that
+    /// fails falls back to `hdiutil`, and an app relaunched over an attached
+    /// disk never saw how it was attached.
+    public static func serving(hdiutilInfoImage image: [String: Any]) -> ImageAttachEngine {
+        (image["diskimages2"] as? Bool) == true ? .diskImages2 : .hdiutil
+    }
+
+    /// The name people know it by, for the Sessions pane.
+    public var displayName: String {
+        switch self {
+        case .hdiutil: "hdiutil (DiskImages)"
+        case .diskImages2: "DiskImages2"
+        }
+    }
+
     /// `hdiutil` unless `override` asks for DiskImages2 on a macOS that can
     /// make its writes write-through.
     public static func choose(osMajor: Int, override: String?) -> ImageAttachEngine {

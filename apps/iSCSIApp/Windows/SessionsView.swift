@@ -31,7 +31,10 @@ struct SessionsView: View {
         .navigationTitle(String(localized: "Sessions"))
         .inspector(isPresented: .constant(selected != nil)) {
             if let session = model.sessions.first(where: { $0.id == selected }) {
-                SessionDetail(session: session)
+                SessionDetail(session: session,
+                              attachment: model.rows.first {
+                                  $0.target.targetIQN == session.targetIQN && $0.target.lun == session.lun
+                              }?.attachment)
             }
         }
     }
@@ -71,6 +74,20 @@ private struct SessionSummary: View {
 
 private struct SessionDetail: View {
     let session: SessionInfo
+    /// What this Mac made of the session's disk, when the app attached it.
+    let attachment: Attachment?
+
+    /// How the disk is presented: as a raw device, as volumes, or as a disk
+    /// with nothing mounted.
+    private var attachedAs: String {
+        guard let attachment, attachment.device != nil else {
+            return String(localized: "Not attached as a disk")
+        }
+        if attachment.isRawDevice { return String(localized: "Raw device, nothing mounted") }
+        return attachment.volumePaths.isEmpty
+            ? String(localized: "Disk, nothing mounted")
+            : String(localized: "Volumes in Finder")
+    }
 
     /// "en18", "en0 (fell back from en18)", or "—" when the daemon cannot say.
     private var interfaceText: String {
@@ -90,6 +107,19 @@ private struct SessionDetail: View {
                     if let bytes = session.byteCount {
                         row(String(localized: "Capacity"), ByteCountFormatter.string(
                             fromByteCount: Int64(bytes), countStyle: .file))
+                    }
+                }
+
+                group(String(localized: "On this Mac")) {
+                    row(String(localized: "Attached as"), attachedAs)
+                    if let attachment, let device = attachment.device {
+                        row(String(localized: "Engine"), attachment.engine?.displayName ?? "—")
+                        row(String(localized: "Device"),
+                            attachment.isRawDevice ? attachment.rawDeviceNode ?? device : device)
+                        if !attachment.volumePaths.isEmpty {
+                            row(String(localized: "Mounted at"),
+                                attachment.volumePaths.joined(separator: "\n"))
+                        }
                     }
                 }
 

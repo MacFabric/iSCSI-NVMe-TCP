@@ -1616,6 +1616,11 @@ met. The same LUN path that gives an image-file guest 7 to 10 MiB/s gives
 a raw-device guest 80 to 95: the cost of an image file on an attached
 volume is APFS above the disk, not the initiator under it. The raw device
 still has no flush (above), so durability is the target's flush policy.
+The same suite on the app's own raw-device attach (build 57.5, the
+"Attach as a raw device" option, writers on `ssd-vms` as HFS+ through
+DiskImages2): framework 91.7 MiB/s alone and 79.6 and 72.0 beside the
+writers, QEMU 90.4 alone and 60.6 and 61.8 beside; no guest write over
+0.92 s.
 
 Not tried: the raw device in the severe state on a real Mac (it needs a
 reboot).
@@ -1710,7 +1715,10 @@ and the simulator, which has no log device, reproduces it.
 - *Can:* keep the disk fast, since the stall is the backlog divided by what
   the throttled sync is allowed; document that a virtual machine is
   better given the raw device of an attached disk with no volume on it than
-  an image file on an attached volume (shown above with QEMU), and, once
+  an image file on an attached volume (shown above with QEMU and the
+  framework; a target can now be attached that way, with nothing mounted
+  whatever it holds: Discover's "Add as a Raw Device", or the editor's
+  "Attach as a raw device"), and, once
   each has been tried with a guest, that an image file is better kept on
   ExFAT than on APFS and that a hypervisor started with `taskpolicy -d
   passive` does not set the stall off; and, if it earns its
@@ -1772,6 +1780,12 @@ disk the app attached itself, as opposed to one attached by `iscsictl`.
 **How to test.** Attach a scratch target in the app, then Erase it in Disk
 Utility and with `diskutil eraseDisk`, app running. Expect the erase to
 finish and the disk to stay attached.
+
+A disk attached as a raw device is exempt (build 57.5, 2026-11-23): the
+handler ignores it. `diskutil eraseDisk JHFS+` on one, app running,
+finished and mounted the new volume; unmounting that left the disk and its
+FSKit mount up, with nothing logged; and a Detach and Attach in the app
+brought it back as a raw device with the HFS+ volume unmounted.
 
 ## A note on method
 
