@@ -7,9 +7,11 @@ import iSCSIKit
 /// bytes and target replies; no language preference is assumed by a service.
 enum LocalizedStorageError {
     static func details(_ error: NSError) -> (message: String, suggestion: String?) {
+        // Any language but English: the daemon's own text is English, so in
+        // English it is already the best message there is.
         guard error.domain == ISCSIError.domain,
               let code = ISCSIError.Code(rawValue: error.code),
-              Bundle.main.preferredLocalizations.first?.hasPrefix("zh") == true
+              let language = Bundle.main.preferredLocalizations.first, language != "en"
         else { return (error.localizedDescription, error.localizedRecoverySuggestion) }
 
         let summary: String

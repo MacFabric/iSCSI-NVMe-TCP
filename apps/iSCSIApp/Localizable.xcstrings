@@ -3,6 +3,12 @@
   "strings": {
     "\n\nIf the target loses power, uncommitted writes are lost out of order — which can corrupt the volume's structure, not just recent files. Choose this only if the target's cache is protected: battery-backed, on a UPS, or with its write cache disabled.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\n\nSi el destino se queda sin alimentación, las escrituras no consolidadas se pierden en desorden, lo que puede dañar la estructura del volumen, no solo los archivos recientes. Elige esta opción solo si la caché del destino está protegida: con batería de respaldo, conectada a un UPS o con su caché de escritura desactivada."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -13,6 +19,12 @@
     },
     " (the full LaunchServices scan is still running)": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " (el análisis completo de LaunchServices sigue en curso)"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -23,6 +35,12 @@
     },
     " Attached now: %@.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " Conectados ahora: %@."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -36,6 +54,12 @@
     },
     "%@\n\nForce Eject takes the volume away from whatever is using it. Anything those apps have not saved is lost, and a file being written at that moment can be left incomplete.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@\n\nForzar expulsión le quita el volumen a lo que lo esté usando. Se pierde todo lo que esas apps no hayan guardado, y un archivo que se esté escribiendo en ese momento puede quedar incompleto."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -49,6 +73,12 @@
     },
     "%@ (fell back from %@)": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (en lugar de %@)"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -59,6 +89,12 @@
     },
     "%@ already exists and is not a link, so it is left alone.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ya existe y no es un enlace, así que no se toca."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -69,6 +105,12 @@
     },
     "%@ already links to %@, so it is left alone.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ya enlaza a %@, así que no se toca."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -79,6 +121,12 @@
     },
     "%@ could not be removed": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no se pudo eliminar %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -89,6 +137,12 @@
     },
     "%@ did not finish within 20 s": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ no terminó en 20 s"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -99,6 +153,12 @@
     },
     "%@ exited %d": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ terminó con el código %d"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -109,6 +169,12 @@
     },
     "%@ failed: %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ falló: %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -119,6 +185,12 @@
     },
     "%@ is not this app's, and was left alone": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ no es de esta app, y no se tocó"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -129,6 +201,12 @@
     },
     "%@ links to this app": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ enlaza a esta app"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -139,6 +217,12 @@
     },
     "%@ — macOS's list of extensions leaves it out, but FSKit loads it (checked with a local test mount)": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ — la lista de extensiones de macOS no la incluye, pero FSKit la carga (verificado con un montaje de prueba local)"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -149,6 +233,12 @@
     },
     "%@. To remove it yourself: sudo rm %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@. Para quitarlo tú mismo: sudo rm %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -159,6 +249,12 @@
     },
     "%lld GB": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld GB"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -169,6 +265,12 @@
     },
     "%lld bytes": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld bytes"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -179,6 +281,12 @@
     },
     "(not resolved)": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(sin resolver)"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -189,6 +297,12 @@
     },
     "**Nothing on the storage device itself is changed.** Your data stays where it is.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "**No se cambia nada en el propio dispositivo de almacenamiento.** Tus datos se quedan donde están."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -199,6 +313,12 @@
     },
     "A disk request did not match the device's block layout.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una solicitud de disco no coincidía con la estructura de bloques del dispositivo."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -209,6 +329,12 @@
     },
     "A few permissions are still needed": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún faltan algunos permisos"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -219,6 +345,12 @@
     },
     "Accept the Risk": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aceptar el riesgo"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -229,6 +361,12 @@
     },
     "Access": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceso"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -239,6 +377,12 @@
     },
     "Add": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -249,6 +393,12 @@
     },
     "Add %@ Target": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar destino %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -259,6 +409,12 @@
     },
     "Add Link": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar enlace"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -269,6 +425,12 @@
     },
     "Add an %@ target": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar un destino %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -279,6 +441,12 @@
     },
     "Add it to the subsystem's allowed hosts on the storage device, or allow any host there. Namespace IDs start at 1.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agrégalo a los hosts permitidos del subsistema en el dispositivo de almacenamiento, o permite allí cualquier host. Los ID de espacio de nombres empiezan en 1."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -289,6 +457,12 @@
     },
     "Add it to the target's allowed initiators on the storage device, or allow any initiator there. It follows this Mac's name, so renaming the Mac changes it.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agrégalo a los iniciadores permitidos del destino en el dispositivo de almacenamiento, o permite allí cualquier iniciador. Depende del nombre de esta Mac, así que cambia si renombras la Mac."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -299,6 +473,12 @@
     },
     "Added": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregado"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -309,6 +489,12 @@
     },
     "Address": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dirección"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -319,6 +505,12 @@
     },
     "All installed modules": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todos los módulos instalados"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -329,6 +521,12 @@
     },
     "An NVMe/TCP subsystem name starts with “nqn.”. For an iSCSI target, add one under iSCSI.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El nombre de un subsistema NVMe/TCP empieza por “nqn.”. Para un destino iSCSI, agrégalo en iSCSI."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -339,6 +537,12 @@
     },
     "Another account on this Mac has this disk attached.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otra cuenta de esta Mac tiene este disco conectado."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -349,6 +553,12 @@
     },
     "Ask the target which %@ it has.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pregunta al destino qué %@ tiene."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -359,6 +569,12 @@
     },
     "Asking the target…": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consultando al destino…"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -369,6 +585,12 @@
     },
     "Attach": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -379,6 +601,12 @@
     },
     "Attach a target to open a session.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conecta un destino para abrir una sesión."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -389,6 +617,12 @@
     },
     "Attach at login": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectar al iniciar sesión"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -399,6 +633,12 @@
     },
     "Attach at login is turned off in System Settings.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectar al iniciar sesión está desactivado en Configuración del Sistema."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -409,6 +649,12 @@
     },
     "Attach at login needs the app in /Applications.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectar al iniciar sesión requiere la app en /Applications."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -419,6 +665,12 @@
     },
     "Attached under a target's earlier address, name or LUN, or for a target that has since been removed.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectados con la dirección, el nombre o el LUN que un destino tenía antes, o de un destino que ya se eliminó."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -429,6 +681,12 @@
     },
     "Attaches by itself when you log in to this Mac. If the target can't be reached, keeps trying for 5 minutes, then shows a warning here.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se conecta solo cuando inicias sesión en esta Mac. Si no se puede acceder al destino, lo sigue intentando durante 5 minutos y luego muestra un aviso aquí."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -439,6 +697,12 @@
     },
     "Attaching it from two accounts at once would corrupt it. Detach it in that account first.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectarlo desde dos cuentas a la vez lo dañaría. Desconéctalo primero en esa cuenta."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -449,6 +713,12 @@
     },
     "Attaching it from two accounts at once would corrupt it. Eject it in the other account, then attach it here.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectarlo desde dos cuentas a la vez lo dañaría. Expúlsalo en la otra cuenta y luego conéctalo aquí."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -459,6 +729,12 @@
     },
     "Attaching storage at login": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectando almacenamiento al iniciar sesión"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -469,6 +745,12 @@
     },
     "Attaching “%@”": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo conectar “%@”"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -479,6 +761,12 @@
     },
     "Attempt enablement write": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intentar escribir la activación"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -489,6 +777,12 @@
     },
     "Authentication": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autenticación"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -499,6 +793,12 @@
     },
     "Authentication (optional)": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autenticación (opcional)"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -509,6 +809,12 @@
     },
     "Automatic (macOS chooses)": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automática (elige macOS)"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -519,6 +825,12 @@
     },
     "Background service installed": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servicio en segundo plano instalado"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -529,6 +841,12 @@
     },
     "Block size": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamaño de bloque"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -539,6 +857,12 @@
     },
     "Blocks": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloques"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -549,6 +873,12 @@
     },
     "CHAP secret": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Secreto CHAP"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -559,6 +889,12 @@
     },
     "CHAP user": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuario CHAP"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -569,6 +905,12 @@
     },
     "Cached writes will be committed every %lld seconds and when the volume is detached.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las escrituras en caché se consolidarán cada %lld segundos y al desconectar el volumen."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -579,6 +921,12 @@
     },
     "Cached writes will be committed every second and when the volume is detached.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las escrituras en caché se consolidarán cada segundo y al desconectar el volumen."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -589,6 +937,12 @@
     },
     "Cancel": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -599,6 +953,12 @@
     },
     "Capacity": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capacidad"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -609,6 +969,12 @@
     },
     "Changing the login item": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo cambiar el elemento de inicio"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -619,6 +985,12 @@
     },
     "Check for Updates…": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar actualizaciones…"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -629,6 +1001,12 @@
     },
     "Check that the background service is running and the filesystem extension is enabled, on the Setup screen.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En la pantalla Configuración inicial, verifica que el servicio en segundo plano esté en ejecución y que la extensión del sistema de archivos esté activada."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -639,6 +1017,12 @@
     },
     "Check the CHAP username and secret, the initiator IQN or host NQN, and the target's access rules. The original response below identifies the specific refusal.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el usuario y el secreto CHAP, el IQN del iniciador o el NQN del host, y las reglas de acceso del destino. La respuesta original de abajo indica el motivo concreto del rechazo."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -649,6 +1033,12 @@
     },
     "Check the address, port and network interface, and confirm the storage device is online.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la dirección, el puerto y la interfaz de red, y confirma que el dispositivo de almacenamiento esté en línea."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -659,6 +1049,12 @@
     },
     "Check the network and storage device, then reconnect.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la red y el dispositivo de almacenamiento, y vuelve a conectar."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -669,6 +1065,12 @@
     },
     "Check the target's protocol settings. Keep the original diagnostic below when reporting this issue.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la configuración de protocolo del destino. Conserva el diagnóstico original de abajo si informas de este problema."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -679,6 +1081,12 @@
     },
     "Choose": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -689,6 +1097,12 @@
     },
     "Clean up": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limpiar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -699,6 +1113,12 @@
     },
     "Close": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -709,6 +1129,12 @@
     },
     "Close anything using the volume — including Finder windows and Terminal sessions inside it — and try again.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cierra todo lo que use el volumen —incluidas las ventanas del Finder y las sesiones de Terminal dentro de él— e intenta de nuevo."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -719,6 +1145,12 @@
     },
     "Commit writes": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consolidar escrituras"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -729,6 +1161,12 @@
     },
     "Connected — attached in another account, or still connecting — so the address, port, name and %@ can't change.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectado —en otra cuenta, o aún conectándose—, así que la dirección, el puerto, el nombre y el %@ no pueden cambiar."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -739,6 +1177,12 @@
     },
     "Continue": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -749,6 +1193,12 @@
     },
     "Continue?": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Continuar?"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -759,6 +1209,12 @@
     },
     "Copy": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -769,6 +1225,12 @@
     },
     "Could not attach at login — %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se conectó al iniciar sesión — %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -779,6 +1241,12 @@
     },
     "Could not attach the LUN as a disk: %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo conectar el LUN como disco: %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -789,6 +1257,12 @@
     },
     "Could not attach “%@” at login": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo conectar “%@” al iniciar sesión"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -799,6 +1273,12 @@
     },
     "Could not connect to the storage target.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo conectar con el destino de almacenamiento."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -809,6 +1289,12 @@
     },
     "Could not serve the LUN as a file, even after removing %lld stale copy(s) of the filesystem extension. Details: %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo servir el LUN como archivo, ni siquiera tras eliminar %lld copia(s) obsoleta(s) de la extensión del sistema de archivos. Detalles: %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -819,6 +1305,12 @@
     },
     "Could not serve the LUN as a file: %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo servir el LUN como archivo: %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -829,6 +1321,12 @@
     },
     "Daemon (SMAppService)": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daemon (SMAppService)"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -839,6 +1337,12 @@
     },
     "Delete saved targets and passwords": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar destinos y contraseñas guardados"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -849,6 +1353,12 @@
     },
     "Delete the folder in Finder once the app has quit.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimina la carpeta en el Finder cuando la app se haya cerrado."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -859,6 +1369,12 @@
     },
     "Detach": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconectar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -869,6 +1385,12 @@
     },
     "Detach All": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconectar todo"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -879,6 +1401,12 @@
     },
     "Detach again. If the storage device is unreachable, detaching waits for it to answer.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a desconectar. Si no se puede acceder al dispositivo de almacenamiento, la desconexión espera a que responda."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -889,6 +1417,12 @@
     },
     "Detach and Install": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconectar e instalar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -899,6 +1433,12 @@
     },
     "Detach and Quit": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconectar y salir"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -909,6 +1449,12 @@
     },
     "Detach it under Other Attached Disks, then attach again.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconéctalo en Otros discos conectados y vuelve a conectarlo."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -919,6 +1465,12 @@
     },
     "Detach it, then edit it. Nothing was saved.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconéctalo y luego edítalo. No se guardó nada."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -929,6 +1481,12 @@
     },
     "Detach them — in each account that has one — and try again.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconéctalos —en cada cuenta que tenga alguno— e intenta de nuevo."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -939,6 +1497,12 @@
     },
     "Detach to change the address, port, name or %@.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconecta para cambiar la dirección, el puerto, el nombre o el %@."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -949,6 +1513,12 @@
     },
     "Detach volumes": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconectar volúmenes"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -959,6 +1529,12 @@
     },
     "Detaching did not finish: %@ is still attached.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La desconexión no terminó: %@ sigue conectado."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -969,6 +1545,12 @@
     },
     "Detaching “%@”": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo desconectar “%@”"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -979,6 +1561,12 @@
     },
     "Device": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispositivo"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -989,6 +1577,12 @@
     },
     "Diagnostics": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnóstico"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -999,6 +1593,12 @@
     },
     "Disabled on the target": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivada en el destino"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1009,6 +1609,12 @@
     },
     "Discover": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descubrir"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1019,6 +1625,12 @@
     },
     "Disk Utility shows what is on it. Do not erase it unless you mean to delete what it holds.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilidad de Discos muestra lo que contiene. No lo borres a menos que quieras eliminar lo que hay en él."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1029,6 +1641,12 @@
     },
     "DiskImages2 attach failed: %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falló la conexión con DiskImages2: %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1039,6 +1657,12 @@
     },
     "DiskImages2 attach unavailable: %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La conexión con DiskImages2 no está disponible: %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1049,6 +1673,12 @@
     },
     "DiskImages2 attached nothing for %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DiskImages2 no conectó nada para %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1059,6 +1689,12 @@
     },
     "Don't Quit": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No salir"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1069,6 +1705,12 @@
     },
     "Durability": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durabilidad"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1079,6 +1721,12 @@
     },
     "Each write is on stable media before it is acknowledged.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada escritura está en un medio estable antes de confirmarse."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1089,6 +1737,12 @@
     },
     "Edit %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1099,6 +1753,12 @@
     },
     "Edit the target: enter a host name, an IPv4 address or an IPv6 address, without brackets, and put the port in the Port field.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edita el destino: escribe un nombre de host, una dirección IPv4 o una dirección IPv6, sin corchetes, y pon el puerto en el campo Puerto."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1109,6 +1769,12 @@
     },
     "Edit “%@”": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar “%@”"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1119,6 +1785,12 @@
     },
     "Edit…": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar…"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1129,6 +1801,12 @@
     },
     "Eject": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expulsar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1139,6 +1817,12 @@
     },
     "Eject and Detach": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expulsar y desconectar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1149,6 +1833,12 @@
     },
     "Eject “%@”?": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Expulsar “%@”?"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1159,6 +1849,12 @@
     },
     "Enable": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1169,6 +1865,12 @@
     },
     "Enable at Next Restart": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activar al reiniciar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1179,6 +1881,12 @@
     },
     "Enable the filesystem extension?": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Activar la extensión del sistema de archivos?"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1189,6 +1897,12 @@
     },
     "Enabled on the target": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activada en el destino"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1199,6 +1913,12 @@
     },
     "Enter the CHAP secret first.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe primero el secreto CHAP."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1209,6 +1929,12 @@
     },
     "Enter the secret too, or clear the user — a name on its own does not verify anything.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe también el secreto o borra el usuario: un nombre por sí solo no verifica nada."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1219,6 +1945,12 @@
     },
     "Every %lld seconds": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada %lld segundos"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1229,6 +1961,12 @@
     },
     "Every second": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada segundo"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1239,6 +1977,12 @@
     },
     "Everything has been removed.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminó todo."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1249,6 +1993,12 @@
     },
     "FSKit module (Backend A)": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Módulo FSKit (Backend A)"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1259,6 +2009,12 @@
     },
     "Fail the connection": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No conectar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1269,6 +2025,12 @@
     },
     "Falls back to whatever macOS picks when this interface is missing or has no route, and tries it again at the next reconnect.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa la que elija macOS cuando esta interfaz no existe o no tiene ruta, y vuelve a probarla en la siguiente reconexión."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1279,6 +2041,12 @@
     },
     "Filesystem extension enabled": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extensión del sistema de archivos activada"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1289,6 +2057,12 @@
     },
     "Filesystem extension registered": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extensión del sistema de archivos registrada"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1299,6 +2073,12 @@
     },
     "Find": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1309,6 +2089,12 @@
     },
     "Finish setting up": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Termina la configuración inicial"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1319,6 +2105,12 @@
     },
     "Finish setup before adding targets": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Termina la configuración inicial antes de agregar destinos"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1329,6 +2121,12 @@
     },
     "Finish setup first — the background service and filesystem extension have to be running before a target can be attached.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Termina primero la configuración inicial: el servicio en segundo plano y la extensión del sistema de archivos tienen que estar en ejecución para poder conectar un destino."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1339,6 +2137,12 @@
     },
     "Force Eject": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forzar expulsión"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1349,6 +2153,12 @@
     },
     "Give up per-write durability?": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Renunciar a la durabilidad en cada escritura?"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1359,6 +2169,12 @@
     },
     "In use by another session on this Mac.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otra cuenta de esta Mac lo está usando."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1369,6 +2185,12 @@
     },
     "Install": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instalar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1379,6 +2201,12 @@
     },
     "Installed in Applications": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instalada en Aplicaciones"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1389,6 +2217,12 @@
     },
     "Installing now would replace the filesystem extension that %@ is using, and anything writing to it at that moment would lose the process answering its reads and writes.\n\nThe update is downloaded and ready. It will install itself and relaunch the app as soon as the last volume is detached. Quitting the app installs it too, so a quit asks you to detach first.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instalar ahora sustituiría la extensión del sistema de archivos que está usando %@, y lo que esté escribiendo en él en ese momento perdería el proceso que atiende sus lecturas y escrituras.\n\nLa actualización está descargada y lista. Se instalará sola y volverá a abrir la app en cuanto se desconecte el último volumen. Salir de la app también la instala, así que al salir se te pedirá que desconectes primero."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1399,6 +2233,12 @@
     },
     "Interface": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interfaz"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1409,6 +2249,12 @@
     },
     "It is on macOS's list of enabled extensions, and turns on the next time the system service that reads the list restarts — at the latest when this Mac restarts. Turning it on now would restart that service and disconnect what is mounted through it, in every account: %@. To turn it on without restarting the Mac, detach those, then choose Re-check.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Está en la lista de extensiones activadas de macOS y se activará la próxima vez que se reinicie el servicio del sistema que lee la lista; a más tardar, cuando se reinicie esta Mac. Activarla ahora reiniciaría ese servicio y desconectaría lo que está montado a través de él, en todas las cuentas: %@. Para activarla sin reiniciar la Mac, desconecta esos volúmenes y elige Volver a verificar."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1419,6 +2265,12 @@
     },
     "It is on macOS's list, but the system service that reads the list could not be restarted: %@. Choose Enable to try again, or restart this Mac.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Está en la lista de macOS, pero no se pudo reiniciar el servicio del sistema que la lee: %@. Elige Activar para intentar de nuevo, o reinicia esta Mac."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1429,6 +2281,12 @@
     },
     "It may still be starting up. Try again shortly.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puede que aún se esté iniciando. Intenta de nuevo en unos momentos."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1439,6 +2297,12 @@
     },
     "It will appear by itself if the target answers. Otherwise check the target and press Attach.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aparecerá solo si el destino responde. Si no, revisa el destino y haz clic en Conectar."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1449,6 +2313,12 @@
     },
     "Its address, port, name or %@ can't change while it is attached: the app finds the mounted volume by them.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Su dirección, puerto, nombre o %@ no pueden cambiar mientras está conectado: la app encuentra el volumen montado a partir de ellos."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1459,6 +2329,12 @@
     },
     "Its settings and saved CHAP secret are removed from this Mac. Nothing on the target changes.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Su configuración y el secreto CHAP guardado se eliminan de esta Mac. No cambia nada en el destino."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1469,6 +2345,12 @@
     },
     "Its settings are removed from this Mac. Nothing on the target changes.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Su configuración se elimina de esta Mac. No cambia nada en el destino."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1479,6 +2361,12 @@
     },
     "Its volume is still mounted and will be ejected first; anything still using files on it — a running virtual machine, an open document — should be shut down before continuing.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Su volumen sigue montado y se expulsará primero; lo que todavía use archivos en él —una máquina virtual en ejecución, un documento abierto— debe cerrarse antes de continuar."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1489,6 +2377,12 @@
     },
     "Its volume is still mounted. Detaching will eject the volume first; anything still using files on it — a running virtual machine, an open document — should be shut down before continuing.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Su volumen sigue montado. Al desconectar se expulsará primero el volumen; lo que todavía use archivos en él —una máquina virtual en ejecución, un documento abierto— debe cerrarse antes de continuar."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1499,6 +2393,12 @@
     },
     "Keep the original diagnostic below and report this issue.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserva el diagnóstico original de abajo e informa de este problema."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1509,6 +2409,12 @@
     },
     "Kept on this Mac's disk, encrypted, only while the target is attached. Takes effect the next time it is attached.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guarda en el disco de esta Mac, cifrada, solo mientras el destino está conectado. Se aplica la próxima vez que se conecte."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1519,6 +2425,12 @@
     },
     "LUN": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LUN"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1529,6 +2441,12 @@
     },
     "LUNs": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LUN"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1539,6 +2457,12 @@
     },
     "Later": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más tarde"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1549,6 +2473,12 @@
     },
     "Loading targets…": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargando destinos…"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1559,6 +2489,12 @@
     },
     "Local cache": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caché local"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1569,6 +2505,12 @@
     },
     "Move App to Trash": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mover la app a la Papelera"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1579,6 +2521,12 @@
     },
     "Mutual CHAP secret": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Secreto CHAP mutuo"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1589,6 +2537,12 @@
     },
     "Mutual CHAP user": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuario CHAP mutuo"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1602,6 +2556,12 @@
     },
     "NVMe/TCP subsystems list themselves to any host that can reach the port. Whether this Mac may attach is decided per subsystem by its host NQN, shown when you edit the target.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los subsistemas NVMe/TCP se anuncian a cualquier host que pueda llegar al puerto. Si esta Mac puede conectarse lo decide cada subsistema según su NQN de host, que se muestra al editar el destino."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1612,6 +2572,12 @@
     },
     "Name": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1622,6 +2588,12 @@
     },
     "Namespace": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espacio de nombres"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1632,6 +2604,12 @@
     },
     "Namespace ID": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ID de espacio de nombres"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1642,6 +2620,12 @@
     },
     "Negotiated": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parámetros negociados"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1652,6 +2636,12 @@
     },
     "Network": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Red"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1662,6 +2652,12 @@
     },
     "Network interface": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interfaz de red"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1672,6 +2668,12 @@
     },
     "Never uses another interface — not Wi-Fi, not a VPN. If this one is unavailable, the connection fails.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nunca usa otra interfaz: ni Wi-Fi ni VPN. Si esta no está disponible, la conexión falla."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1682,6 +2684,12 @@
     },
     "Never — target cache is non-volatile": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nunca — caché no volátil"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1692,6 +2700,12 @@
     },
     "No %@ targets": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay destinos %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1702,6 +2716,12 @@
     },
     "No Active Sessions": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay sesiones activas"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1712,6 +2732,12 @@
     },
     "No Targets": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay destinos"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1722,6 +2748,12 @@
     },
     "No Targets Offered": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ofrece ningún destino"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1732,6 +2764,12 @@
     },
     "No flushes will be sent while attached — only when the volume is detached.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se enviarán vaciados de caché mientras esté conectado; solo al desconectar el volumen."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1742,6 +2780,12 @@
     },
     "No targets yet": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay destinos"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1752,6 +2796,12 @@
     },
     "Not now": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ahora no"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1762,6 +2812,12 @@
     },
     "Not reported": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No informado"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1772,6 +2828,12 @@
     },
     "OK": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1782,6 +2844,12 @@
     },
     "Off": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivada"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1792,6 +2860,12 @@
     },
     "On (FUA on every write)": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activada (FUA en cada escritura)"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1802,6 +2876,12 @@
     },
     "On every write — safest": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En cada escritura — lo más seguro"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1812,6 +2892,12 @@
     },
     "Only this copy registered": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo esta copia registrada"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1822,6 +2908,12 @@
     },
     "Open Disk Utility, select it, and erase it as APFS or ExFAT. It will mount by itself afterwards.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Utilidad de Discos, selecciónalo y bórralo como APFS o ExFAT. Después se montará solo."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1832,6 +2924,12 @@
     },
     "Open Login Items…": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir Elementos de inicio…"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1842,6 +2940,12 @@
     },
     "Open System Settings": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir Configuración del Sistema"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1852,6 +2956,12 @@
     },
     "Open the Setup screen to see what is missing.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre la pantalla Configuración inicial para ver qué falta."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1862,6 +2972,12 @@
     },
     "Optional. Adds a link in /usr/local/bin so iscsictl runs from any Terminal, for every account on this Mac. macOS asks for an administrator's password.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opcional. Agrega un enlace en /usr/local/bin para que iscsictl funcione desde cualquier Terminal, en todas las cuentas de esta Mac. macOS pide la contraseña de un administrador."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1872,6 +2988,12 @@
     },
     "Optional. Proves the target is who it claims to be.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opcional. Demuestra que el destino es quien dice ser."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1882,6 +3004,12 @@
     },
     "Original diagnostic:": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnóstico original:"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1892,6 +3020,12 @@
     },
     "Other Attached Disks": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otros discos conectados"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1902,6 +3036,12 @@
     },
     "Photos archive": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivo de fotos"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1912,6 +3052,12 @@
     },
     "Port": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puerto"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1922,6 +3068,12 @@
     },
     "Portal": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portal"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1932,6 +3084,12 @@
     },
     "Protocol": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protocolo"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1942,6 +3100,12 @@
     },
     "Quit": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salir"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1952,6 +3116,12 @@
     },
     "Quit the apps using files on it — Finder windows and Terminal sessions inside it count — and detach again.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cierra las apps que usan archivos en él —también cuentan las ventanas del Finder y las sesiones de Terminal abiertas dentro de él— y vuelve a desconectar."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1962,6 +3132,12 @@
     },
     "Quitting now installs version %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si sales ahora, se instala la versión %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1972,6 +3148,12 @@
     },
     "Re-check": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a verificar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1982,6 +3164,12 @@
     },
     "Re-register": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a registrar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1992,6 +3180,12 @@
     },
     "Reading your targets": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron leer tus destinos"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2002,6 +3196,12 @@
     },
     "Ready": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listo"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2012,6 +3212,12 @@
     },
     "Reconnect to the storage target.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a conectar con el destino de almacenamiento."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2022,6 +3228,12 @@
     },
     "Refresh": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2032,6 +3244,12 @@
     },
     "Register": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2042,6 +3260,12 @@
     },
     "Reinstall": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reinstalar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2052,6 +3276,12 @@
     },
     "Reinstall the background service?": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Reinstalar el servicio en segundo plano?"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2062,6 +3292,12 @@
     },
     "Remove": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2072,6 +3308,12 @@
     },
     "Remove %@ Target": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar destino %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2082,6 +3324,12 @@
     },
     "Remove Everything": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar todo"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2092,6 +3340,12 @@
     },
     "Remove Everything…": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar todo…"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2102,6 +3356,12 @@
     },
     "Remove iSCSI/NVMe/TCP Initiator": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desinstalar iSCSI/NVMe/TCP Initiator"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2112,6 +3372,12 @@
     },
     "Remove iSCSI/NVMe/TCP Initiator and everything it stored?": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Desinstalar iSCSI/NVMe/TCP Initiator y eliminar todo lo que guardó?"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2122,6 +3388,12 @@
     },
     "Remove iSCSI/NVMe/TCP Initiator from Open at Login in System Settings → General → Login Items & Extensions.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quita iSCSI/NVMe/TCP Initiator de Abrir al iniciar sesión en Configuración del Sistema → General → Elementos de inicio y extensiones."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2132,6 +3404,12 @@
     },
     "Remove iSCSI/NVMe/TCP Initiator…": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desinstalar iSCSI/NVMe/TCP Initiator…"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2142,6 +3420,12 @@
     },
     "Remove it in System Settings → General → Login Items & Extensions.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimínalo en Configuración del Sistema → General → Elementos de inicio y extensiones."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2152,6 +3436,12 @@
     },
     "Remove the background service": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar el servicio en segundo plano"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2162,6 +3452,12 @@
     },
     "Remove the iscsictl link": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar el enlace de iscsictl"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2172,6 +3468,12 @@
     },
     "Remove the login item": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar el elemento de inicio"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2182,6 +3484,12 @@
     },
     "Remove the other copies' registrations?": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar los registros de las otras copias?"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2192,6 +3500,12 @@
     },
     "Remove “%@”": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar “%@”"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2202,6 +3516,12 @@
     },
     "Remove “%@”?": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar “%@”?"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2212,6 +3532,12 @@
     },
     "Remove…": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar…"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2222,6 +3548,12 @@
     },
     "Removing “%@”": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo eliminar “%@”"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2232,6 +3564,12 @@
     },
     "Restarting will release it, after which the folder can be deleted.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al reiniciar se liberará, y después se podrá eliminar la carpeta."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2242,6 +3580,12 @@
     },
     "Reveal": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2252,6 +3596,12 @@
     },
     "Reveal in Finder": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar en el Finder"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2262,6 +3612,12 @@
     },
     "Save": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2272,6 +3628,12 @@
     },
     "Saved with another CHAP user": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardado con otro usuario CHAP"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2282,6 +3644,12 @@
     },
     "Saved without CHAP": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardado sin CHAP"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2292,6 +3660,12 @@
     },
     "Saved — type to replace": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardado; escribe para sustituirlo"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2302,6 +3676,12 @@
     },
     "Saving “%@”": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar “%@”"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2312,6 +3692,12 @@
     },
     "Searching…": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscando…"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2322,6 +3708,12 @@
     },
     "Secrets must be at least 12 characters.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los secretos deben tener al menos 12 caracteres."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2332,6 +3724,12 @@
     },
     "Select a %@ target to remove it": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona un destino %@ para eliminarlo"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2342,6 +3740,12 @@
     },
     "Session recoveries": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recuperaciones de sesión"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2352,6 +3756,12 @@
     },
     "Sessions": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesiones"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2362,6 +3772,12 @@
     },
     "Setup": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuración inicial"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2372,6 +3788,12 @@
     },
     "Setup is not finished": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La configuración inicial no ha terminado"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2382,6 +3804,12 @@
     },
     "Setup is not finished.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La configuración inicial no ha terminado."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2392,6 +3820,12 @@
     },
     "Show": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2402,6 +3836,12 @@
     },
     "Show in Finder": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar en el Finder"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2412,6 +3852,12 @@
     },
     "Size": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamaño"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2422,6 +3868,12 @@
     },
     "Some devices require credentials before they will list their targets. Leave these empty if yours does not.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algunos dispositivos piden credenciales antes de mostrar sus destinos. Déjalos vacíos si el tuyo no las pide."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2432,6 +3884,12 @@
     },
     "Some things could not be removed.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algunas cosas no se pudieron eliminar."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2442,6 +3900,12 @@
     },
     "Still attached: %@. Quitting would install the update under it. Detach it — in each account that has one — and quit again.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sigue conectado: %@. Si sales, la actualización se instalaría mientras está en uso. Desconéctalo —en cada cuenta que tenga uno— y vuelve a salir."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2452,6 +3916,12 @@
     },
     "Still trying to attach after 5 minutes.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sigue intentando conectar tras 5 minutos."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2462,6 +3932,12 @@
     },
     "Stopped: %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detenido: %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2472,6 +3948,12 @@
     },
     "Subsystem": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subsistema"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2482,6 +3964,12 @@
     },
     "Subsystem NQN": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NQN del subsistema"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2492,6 +3980,12 @@
     },
     "Takes effect the next time this target is attached.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se aplica la próxima vez que se conecte este destino."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2502,6 +3996,12 @@
     },
     "Target": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destino"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2512,6 +4012,12 @@
     },
     "Targets": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destinos"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2522,6 +4028,12 @@
     },
     "That is an NVMe/TCP subsystem name. Add it under NVMe/TCP instead.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ese es un nombre de subsistema NVMe/TCP. Agrégalo en NVMe/TCP."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2532,6 +4044,12 @@
     },
     "The %@ is attached as %@ and has no filesystem on it yet, which is normal for a new %@.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El %1$@ está conectado como %2$@ y todavía no tiene un sistema de archivos, algo normal en un %3$@ nuevo."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2542,6 +4060,12 @@
     },
     "The %@ is attached as %@, and it is not empty, but macOS did not mount a volume from it. It may use a filesystem macOS cannot read, be encrypted and locked, or still be checking.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El %1$@ está conectado como %2$@ y no está vacío, pero macOS no montó ningún volumen. Puede que use un sistema de archivos que macOS no sabe leer, que esté cifrado y bloqueado, o que aún se esté verificando."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2552,6 +4076,12 @@
     },
     "The app could not move itself to the Trash: %@ Finder is showing it — drag it to the Trash.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La app no pudo moverse a la Papelera: %@ El Finder la está mostrando; arrástrala a la Papelera."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2562,6 +4092,12 @@
     },
     "The app is staying open": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La app sigue abierta"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2572,6 +4108,12 @@
     },
     "The app itself goes last: when everything else is removed, a button moves it to the Trash and quits.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La app se elimina al final: cuando todo lo demás se haya eliminado, un botón la mueve a la Papelera y la cierra."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2582,6 +4124,12 @@
     },
     "The background service is unregistered and the filesystem extension is turned off. An iscsictl link is removed if this app added one, which needs an administrator's password.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se anula el registro del servicio en segundo plano y se desactiva la extensión del sistema de archivos. Si esta app agregó un enlace de iscsictl, se quita, lo que requiere la contraseña de un administrador."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2592,6 +4140,12 @@
     },
     "The connection to the storage target was interrupted.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se interrumpió la conexión con el destino de almacenamiento."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2602,6 +4156,12 @@
     },
     "The connection to the target may have dropped. Try again.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puede que se haya perdido la conexión con el destino. Intenta de nuevo."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2612,6 +4172,12 @@
     },
     "The device answered, but is not offering any targets to this initiator.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El dispositivo respondió, pero no ofrece ningún destino a este iniciador."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2622,6 +4188,12 @@
     },
     "The device may be restarting or rebalancing. Try connecting again shortly.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puede que el dispositivo se esté reiniciando o redistribuyendo la carga. Vuelve a conectar en unos momentos."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2632,6 +4204,12 @@
     },
     "The extra copies were removed. Quit and reopen the app, then try again. If a disk image of an older version is still mounted in Finder, eject it first — that is usually where the extra copies come from.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminaron las copias sobrantes. Sal de la app, vuelve a abrirla e intenta de nuevo. Si en el Finder sigue montada una imagen de disco de una versión anterior, expúlsala primero: de ahí suelen venir las copias sobrantes."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2642,6 +4220,12 @@
     },
     "The filesystem extension mounted but produced no LUN file at %@.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La extensión del sistema de archivos se montó, pero no generó ningún archivo de LUN en %@."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2652,6 +4236,12 @@
     },
     "The link could not be added: %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo agregar el enlace: %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2662,6 +4252,12 @@
     },
     "The original diagnostic below contains the device's status and any suggested remedy.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El diagnóstico original de abajo contiene el estado del dispositivo y la solución que sugiera, si la hay."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2672,6 +4268,12 @@
     },
     "The storage device is not ready.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El dispositivo de almacenamiento no está listo."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2682,6 +4284,12 @@
     },
     "The storage device rejected a request.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El dispositivo de almacenamiento rechazó una solicitud."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2692,6 +4300,12 @@
     },
     "The storage operation could not be completed.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo completar la operación de almacenamiento."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2702,6 +4316,12 @@
     },
     "The storage target did not complete a request in time.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El destino de almacenamiento no completó una solicitud a tiempo."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2712,6 +4332,12 @@
     },
     "The storage target ended the connection.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El destino de almacenamiento cerró la conexión."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2722,6 +4348,12 @@
     },
     "The storage target refused this Mac's login.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El destino de almacenamiento rechazó el inicio de sesión de esta Mac."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2732,6 +4364,12 @@
     },
     "The storage target requested a different connection address.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El destino de almacenamiento pidió usar otra dirección de conexión."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2742,6 +4380,12 @@
     },
     "The storage target returned an incompatible response.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El destino de almacenamiento devolvió una respuesta incompatible."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2752,6 +4396,12 @@
     },
     "The target has %@s %@.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Números de %@ en el destino: %@."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2762,6 +4412,12 @@
     },
     "The target has %@s %@; %@ is not one of them. Choose one.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Números de %@ en el destino: %@. El %@ no está entre ellos; elige uno."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2772,6 +4428,12 @@
     },
     "The target has one %@: %@.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El destino tiene un solo %@: %@."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2782,6 +4444,12 @@
     },
     "The target reports no %@s.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El destino no indica ningún %@."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2792,6 +4460,12 @@
     },
     "The update installs when the app quits, and installing replaces the filesystem extension that %@ is using.\n\nDetach first, or keep the app open and quit later.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La actualización se instala al salir de la app, y al instalarse sustituye la extensión del sistema de archivos que está usando %@.\n\nDesconecta primero, o mantén la app abierta y sal más tarde."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2802,6 +4476,12 @@
     },
     "The volume is in use, so it was not ejected. %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El volumen está en uso, así que no se expulsó. %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2812,6 +4492,12 @@
     },
     "This Mac's host NQN": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NQN de host de esta Mac"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2822,6 +4508,12 @@
     },
     "This Mac's initiator IQN": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IQN de iniciador de esta Mac"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2832,6 +4524,12 @@
     },
     "This account's saved targets and stored passwords are deleted.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminan los destinos guardados y las contraseñas de esta cuenta."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2842,6 +4540,12 @@
     },
     "This connection is no longer active.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta conexión ya no está activa."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2852,6 +4556,12 @@
     },
     "This daemon was built with DEBUG and accepts XPC connections from any process. Never ship it.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este daemon se compiló con DEBUG y acepta conexiones XPC de cualquier proceso. No lo distribuyas nunca."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2862,6 +4572,12 @@
     },
     "This disk is already attached, under the settings the target had before it was edited.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este disco ya está conectado, con la configuración que tenía el destino antes de editarlo."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2872,6 +4588,12 @@
     },
     "This removes macOS's registration of the copies listed above so only this one is used. It does not delete any files.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto elimina el registro que macOS tiene de las copias de arriba, para que solo se use esta. No elimina ningún archivo."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2882,6 +4604,12 @@
     },
     "This stops the background service and starts it again, and disks attached through it lose their connection — eject them first, in each account that has one.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto detiene el servicio en segundo plano y lo vuelve a iniciar, y los discos conectados a través de él pierden la conexión; expúlsalos primero, en cada cuenta que tenga alguno."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2892,6 +4620,12 @@
     },
     "This stops the background service running from the other copy and starts it from this one. Disks attached through it lose their connection — eject them in Finder first.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto detiene el servicio en segundo plano que se ejecuta desde la otra copia y lo inicia desde esta. Los discos conectados a través de él pierden la conexión; expúlsalos primero en el Finder."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2902,6 +4636,12 @@
     },
     "This target caches writes and write-through is off. Data acknowledged as written may not survive a power loss.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este destino almacena las escrituras en caché y la escritura directa está desactivada. Los datos confirmados como escritos podrían no sobrevivir a un corte de energía."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2912,6 +4652,12 @@
     },
     "Turn On": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2922,6 +4668,12 @@
     },
     "Turn off the filesystem extension": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivar la extensión del sistema de archivos"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2932,6 +4684,12 @@
     },
     "Turning it on means restarting a system service, which would disconnect what is mounted through it on this Mac, in every account: %@. Detach those, then choose Re-check — or choose Enable at Next Restart and restart this Mac.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activarla implica reiniciar un servicio del sistema, lo que desconectaría lo que está montado a través de él en esta Mac, en todas las cuentas: %@. Desconecta esos volúmenes y elige Volver a verificar, o elige Activar al reiniciar y reinicia esta Mac."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2942,6 +4700,12 @@
     },
     "Turning on the login item": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo activar el elemento de inicio"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2952,6 +4716,12 @@
     },
     "Unregister": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anular registro"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2962,6 +4732,12 @@
     },
     "Use These Credentials": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar estas credenciales"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2972,6 +4748,12 @@
     },
     "Use another interface": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar otra interfaz"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2982,6 +4764,12 @@
     },
     "Use the address in the original response below.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa la dirección que aparece en la respuesta original de abajo."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2992,6 +4780,12 @@
     },
     "Verify the target": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificar el destino"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3002,6 +4796,12 @@
     },
     "Version %@ is ready. It will install and relaunch once every volume is detached.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La versión %@ está lista. Se instalará y volverá a abrir la app cuando se desconecten todos los volúmenes."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3012,6 +4812,12 @@
     },
     "Version %@ will install after you detach": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La versión %@ se instalará cuando desconectes"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3022,6 +4828,12 @@
     },
     "Volumes are unmounted first, and nothing is forced. If something is using a volume, removal stops and says so.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primero se desmontan los volúmenes, sin forzar nada. Si algo está usando un volumen, la desinstalación se detiene y lo indica."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3032,6 +4844,12 @@
     },
     "Wait for it to finish and try again.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espera a que termine e intenta de nuevo."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3042,6 +4860,12 @@
     },
     "When unavailable": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si no está disponible"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3052,6 +4876,12 @@
     },
     "Working": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En curso"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3062,6 +4892,12 @@
     },
     "Write cache": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caché de escritura"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3072,6 +4908,12 @@
     },
     "Write safety": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seguridad de escritura"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3082,6 +4924,12 @@
     },
     "Write-through": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escritura directa"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3092,6 +4940,12 @@
     },
     "Writes will be acknowledged while they are still in the target's volatile cache. ": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las escrituras se confirmarán mientras aún estén en la caché volátil del destino. "
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3102,6 +4956,12 @@
     },
     "Your saved targets and their passwords will be deleted. Nothing on the storage device itself is touched.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminarán tus destinos guardados y sus contraseñas. No se toca nada del propio dispositivo de almacenamiento."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3112,6 +4972,12 @@
     },
     "a volume is still mounted there: %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aún hay un volumen montado ahí: %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3122,6 +4988,12 @@
     },
     "a volume that is attached": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "un volumen conectado"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3132,6 +5004,12 @@
     },
     "already registered": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ya registrado"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3142,6 +5020,12 @@
     },
     "an attach or detach is still running": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aún hay una conexión o desconexión en curso"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3152,6 +5036,12 @@
     },
     "approved, but not answering — the daemon is not running": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aprobado, pero no responde — el daemon no está en ejecución"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3162,6 +5052,12 @@
     },
     "atomic replace": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sustitución atómica"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3172,6 +5068,12 @@
     },
     "checking…": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "verificando…"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3182,6 +5084,12 @@
     },
     "connected as %@ — no volume mounted": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "conectado como %@ — ningún volumen montado"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3192,6 +5100,12 @@
     },
     "connected as %@ — not formatted yet": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "conectado como %@ — aún sin formato"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3202,6 +5116,12 @@
     },
     "connected as %@ — “%@” is encrypted and locked": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "en %@ — “%@” cifrado y bloqueado"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3212,6 +5132,12 @@
     },
     "could not ask FSKit: %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no se pudo consultar a FSKit: %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3222,6 +5148,12 @@
     },
     "could not create %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no se pudo crear %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3232,6 +5164,12 @@
     },
     "could not delete %@ in %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no se pudo eliminar %@ en %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3242,6 +5180,12 @@
     },
     "could not enable it: %@. ": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no se pudo activar: %@. "
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3252,6 +5196,12 @@
     },
     "could not load DiskImages2.framework": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no se pudo cargar DiskImages2.framework"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3262,6 +5212,12 @@
     },
     "could not serialize: %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no se pudo serializar: %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3272,6 +5228,12 @@
     },
     "could not tell whether it is enabled: a local test mount failed: %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no se pudo saber si está activada: falló un montaje de prueba local: %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3282,6 +5244,12 @@
     },
     "detached %lld": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "desconectados: %lld"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3292,6 +5260,12 @@
     },
     "disabled and unregistered": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "desactivada y sin registrar"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3302,6 +5276,12 @@
     },
     "diskutil did not run": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "diskutil no se ejecutó"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3312,6 +5292,12 @@
     },
     "enabled": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "activada"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3322,6 +5308,12 @@
     },
     "enabled (checked with a local test mount; macOS's list of extensions leaves it out)": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "activada (verificado con un montaje de prueba local; la lista de extensiones de macOS no la incluye)"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3332,6 +5324,12 @@
     },
     "enabledModules.plist is not an array of strings": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "enabledModules.plist no es una lista de cadenas"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3342,6 +5340,12 @@
     },
     "failed: %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "error: %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3352,6 +5356,12 @@
     },
     "hdiutil did not run": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hdiutil no se ejecutó"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3365,6 +5375,12 @@
     },
     "iSCSI/NVMe/TCP Initiator": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iSCSI/NVMe/TCP Initiator"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3375,6 +5391,12 @@
     },
     "iSCSI/NVMe/TCP Initiator is not set to open at login, so nothing will attach.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iSCSI/NVMe/TCP Initiator no está configurado para abrirse al iniciar sesión, así que no se conectará nada."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3385,6 +5407,12 @@
     },
     "iSCSI/NVMe/TCP Initiator needs a background service to hold the connection to your storage.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iSCSI/NVMe/TCP Initiator necesita un servicio en segundo plano que mantenga la conexión con tu almacenamiento."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3395,6 +5423,12 @@
     },
     "iSCSI/NVMe/TCP Initiator wants to add the iscsictl command to /usr/local/bin.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iSCSI/NVMe/TCP Initiator quiere agregar el comando iscsictl a /usr/local/bin."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3405,6 +5439,12 @@
     },
     "iSCSI/NVMe/TCP Initiator wants to remove the iscsictl command from /usr/local/bin.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iSCSI/NVMe/TCP Initiator quiere quitar el comando iscsictl de /usr/local/bin."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3415,6 +5455,12 @@
     },
     "iSCSI/NVMe/TCP Initiator will add its filesystem extension to the list macOS keeps of enabled extensions, at\n\n~/Library/Group Containers/group.com.apple.fskit.settings/enabledModules.plist\n\nNothing else on that list is changed, and nothing is restarted now, so nothing mounted is disconnected. The extension turns on the next time the service that reads the list restarts — at the latest when this Mac restarts.\n\nThis is normally done by the switch in System Settings, but that switch does not work on this version of macOS.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iSCSI/NVMe/TCP Initiator agregará su extensión del sistema de archivos a la lista de extensiones activadas que mantiene macOS, en\n\n~/Library/Group Containers/group.com.apple.fskit.settings/enabledModules.plist\n\nNo se cambia nada más de esa lista, y no se reinicia nada ahora, así que no se desconecta nada de lo que está montado. La extensión se activará la próxima vez que se reinicie el servicio que lee la lista; a más tardar, cuando se reinicie esta Mac.\n\nNormalmente esto lo hace el interruptor de Configuración del Sistema, pero ese interruptor no funciona en esta versión de macOS."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3425,6 +5471,12 @@
     },
     "iSCSI/NVMe/TCP Initiator will add its filesystem extension to the list macOS keeps of enabled extensions, at\n\n~/Library/Group Containers/group.com.apple.fskit.settings/enabledModules.plist\n\nand then restart the system service that reads it. Nothing else on that list is changed.\n\nRestarting that service disconnects everything mounted through it, in every account on this Mac — this app's volumes, and on this version of macOS also FAT and exFAT drives. Nothing like that is mounted right now; if something is by the time you confirm, the restart is skipped and you will be told what is in the way.\n\nThis is normally done by the switch in System Settings, but that switch does not work on this version of macOS.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iSCSI/NVMe/TCP Initiator agregará su extensión del sistema de archivos a la lista de extensiones activadas que mantiene macOS, en\n\n~/Library/Group Containers/group.com.apple.fskit.settings/enabledModules.plist\n\ny luego reiniciará el servicio del sistema que la lee. No se cambia nada más de esa lista.\n\nReiniciar ese servicio desconecta todo lo que está montado a través de él, en todas las cuentas de esta Mac: los volúmenes de esta app y, en esta versión de macOS, también las unidades FAT y exFAT. En este momento no hay nada de eso montado; si lo hay cuando confirmes, se omitirá el reinicio y se te dirá qué lo impide.\n\nNormalmente esto lo hace el interruptor de Configuración del Sistema, pero ese interruptor no funciona en esta versión de macOS."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3435,6 +5487,12 @@
     },
     "iSCSI/NVMe/TCP Initiator…": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iSCSI/NVMe/TCP Initiator…"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3445,6 +5503,12 @@
     },
     "in-place (atomic replace failed: %@)": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "en el lugar (falló la sustitución atómica: %@)"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3458,6 +5522,12 @@
     },
     "iscsictl on the command line": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iscsictl en la línea de comandos"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3468,6 +5538,12 @@
     },
     "lsregister not present at the expected path": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lsregister no está en la ruta esperada"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3478,6 +5554,12 @@
     },
     "macOS %@ has a bug that leaves the File System Extensions switch stuck off for third-party extensions, so it has to be enabled another way.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS %@ tiene un error que deja bloqueado en desactivado el interruptor de Extensiones del sistema de archivos para las extensiones de terceros, así que hay que activarla de otra forma."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3488,6 +5570,12 @@
     },
     "macOS 26.x fallback": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alternativa para macOS 26.x"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3498,6 +5586,12 @@
     },
     "macOS has not registered the extension inside this app yet. This usually resolves itself a moment after the app is moved or launched; if it does not, registering explicitly fixes it.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS aún no ha registrado la extensión que contiene esta app. Normalmente se resuelve solo un momento después de mover o abrir la app; si no, registrarla explícitamente lo arregla."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3508,6 +5602,12 @@
     },
     "macOS is waiting for you to allow the background service in System Settings.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS está esperando a que permitas el servicio en segundo plano en Configuración del Sistema."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3518,6 +5618,12 @@
     },
     "macOS needs your permission to run the filesystem extension. Turn on “iSCSI/NVMe/TCP Initiator” under File System Extensions.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS necesita tu permiso para ejecutar la extensión del sistema de archivos. Activa “iSCSI/NVMe/TCP Initiator” en Extensiones del sistema de archivos."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3528,6 +5634,12 @@
     },
     "macOS started the background service from %@ again instead of this copy. Remove or clean up that copy, then quit and reopen this app.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS volvió a iniciar el servicio en segundo plano desde %@ en lugar de desde esta copia. Elimina o limpia esa copia, y luego sal de esta app y vuelve a abrirla."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3538,6 +5650,12 @@
     },
     "macOS still does not list the extension after re-registering. Quitting and reopening the app usually settles it; if not, drag the app out of Applications and back in. (tried: %@)": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS sigue sin mostrar la extensión tras volver a registrarla. Salir de la app y volver a abrirla suele resolverlo; si no, saca la app de Aplicaciones y vuelve a ponerla. (intentado: %@)"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3548,6 +5666,12 @@
     },
     "macOS's list of extensions leaves it out, and a local test mount failed: %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la lista de extensiones de macOS no la incluye, y falló un montaje de prueba local: %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3558,6 +5682,12 @@
     },
     "namespace": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "espacio de nombres"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3568,6 +5698,12 @@
     },
     "namespaces": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "espacios de nombres"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3581,6 +5717,12 @@
     },
     "no enabledModules.plist at that path — refusing to invent one, since writing a fresh file would drop Apple's own modules from the enabled set": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no hay ningún enabledModules.plist en esa ruta — no se crea uno, porque escribir un archivo nuevo quitaría los módulos de Apple del conjunto activado"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3591,6 +5733,12 @@
     },
     "not installed": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no instalado"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3601,6 +5749,12 @@
     },
     "not registered — FSKit does not know this module exists": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no registrado — FSKit no sabe que este módulo existe"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3611,6 +5765,12 @@
     },
     "not removed": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no se quitó"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3621,6 +5781,12 @@
     },
     "not run": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no se ejecutó"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3631,6 +5797,12 @@
     },
     "nothing else is removed while a volume is in use.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no se elimina nada más mientras un volumen esté en uso."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3641,6 +5813,12 @@
     },
     "nothing left behind": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no quedó nada"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3651,6 +5829,12 @@
     },
     "nothing was attached": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no había nada conectado"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3664,6 +5848,12 @@
     },
     "only this copy is registered": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "solo esta copia está registrada"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3674,6 +5864,12 @@
     },
     "optional": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "opcional"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3684,6 +5880,12 @@
     },
     "query failed: %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "falló la consulta: %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3694,6 +5896,12 @@
     },
     "read failed: %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "falló la lectura: %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3704,6 +5912,12 @@
     },
     "recovered %lld×": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "recuperada %lld×"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3714,6 +5928,12 @@
     },
     "registered and ENABLED": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "registrado y ACTIVADO"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3724,6 +5944,12 @@
     },
     "registered, DISABLED — this is the gate": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "registrado, DESACTIVADO — este es el bloqueo"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3734,6 +5960,12 @@
     },
     "removed": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "eliminado"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3744,6 +5976,12 @@
     },
     "removed %lld duplicate registration(s)": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "se eliminaron %lld registro(s) duplicado(s)"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3754,6 +5992,12 @@
     },
     "removed; %lld other accounts' saved targets were kept": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "eliminado; se conservaron los destinos guardados de otras %lld cuentas"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3764,6 +6008,12 @@
     },
     "removed; another account's saved targets were kept": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "eliminado; se conservaron los destinos guardados de otra cuenta"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3774,6 +6024,12 @@
     },
     "running %@ (%@), pid %d": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "versión %@ (%@) en ejecución, pid %d"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3784,6 +6040,12 @@
     },
     "running %@ but this app is %@ — needs re-registering": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "se ejecuta la versión %@, pero esta app es la %@ — hay que volver a registrarlo"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3794,6 +6056,12 @@
     },
     "running %@, pid %d": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "versión %@ en ejecución, pid %d"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3804,6 +6072,12 @@
     },
     "running from %@. A LaunchDaemon has to be reachable before anyone logs in, and it runs as root from wherever this app lives — so the app needs to be in /Applications, which only an administrator can change, rather than in your home folder.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "se está ejecutando desde %@. Un LaunchDaemon tiene que estar accesible antes de que alguien inicie sesión, y se ejecuta como root desde donde esté esta app, así que la app debe estar en /Applications, que solo un administrador puede modificar, y no en tu carpeta de inicio."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3814,6 +6088,12 @@
     },
     "running from a temporary read-only copy (App Translocation). Move it to Applications and reopen — a daemon registered from here would point at a path that disappears.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "se está ejecutando desde una copia temporal de solo lectura (App Translocation). Muévela a Aplicaciones y vuelve a abrirla: un daemon registrado desde aquí apuntaría a una ruta que desaparece."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3824,6 +6104,12 @@
     },
     "running from another copy of the app at %@ — needs reinstalling from this one": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "se ejecuta desde otra copia de la app en %@ — hay que reinstalarlo desde esta"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3834,6 +6120,12 @@
     },
     "still attached: %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aún conectado: %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3844,6 +6136,12 @@
     },
     "still in use: %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aún en uso: %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3854,6 +6152,12 @@
     },
     "the LaunchDaemon plist is missing from the app bundle (packaging bug)": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "falta el plist del LaunchDaemon en el paquete de la app (error de empaquetado)"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3864,6 +6168,12 @@
     },
     "the app's code signature is not valid for this. Reinstall by dragging from the DMG.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la firma de código de la app no es válida para esto. Reinstálala arrastrándola desde el DMG."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3874,6 +6184,12 @@
     },
     "the background service belongs to another copy of the app at %@; it needs reinstalling from this one.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "el servicio en segundo plano pertenece a otra copia de la app en %@; hay que reinstalarlo desde esta."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3884,6 +6200,12 @@
     },
     "the background service is approved but not running — most often because it belongs to a copy of the app that no longer exists. Reinstall it from this copy.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "el servicio en segundo plano está aprobado pero no se está ejecutando; lo más habitual es que pertenezca a una copia de la app que ya no existe. Reinstálalo desde esta copia."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3894,6 +6216,12 @@
     },
     "the background service is kept until it has deleted the saved passwords. Try again.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "el servicio en segundo plano se conserva hasta que haya borrado las contraseñas guardadas. Intenta de nuevo."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3904,6 +6232,12 @@
     },
     "the background service is version %@ but this app is %@; it needs reinstalling.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "el servicio en segundo plano es la versión %@, pero esta app es la %@; hay que reinstalarlo."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3914,6 +6248,12 @@
     },
     "the daemon does not implement the protocol": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "el daemon no implementa el protocolo"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3924,6 +6264,12 @@
     },
     "the daemon is not running": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "el daemon no está en ejecución"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3934,6 +6280,12 @@
     },
     "the daemon replied with nothing": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "el daemon no respondió nada"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3944,6 +6296,12 @@
     },
     "the daemon sent a reply this version cannot read (%@). This usually means the app and the background service are different versions; the Setup screen can reinstall it.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "el daemon envió una respuesta que esta versión no puede leer (%@). Normalmente significa que la app y el servicio en segundo plano son de versiones distintas; la pantalla Configuración inicial puede reinstalarlo."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3954,6 +6312,12 @@
     },
     "the daemon stopped mid-call": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "el daemon se detuvo a mitad de la llamada"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3964,6 +6328,12 @@
     },
     "the extension is not registered yet — that step has to pass first": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la extensión aún no está registrada — ese paso tiene que completarse primero"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3974,6 +6344,12 @@
     },
     "the system still reports it as registered (status %lld)": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "el sistema aún lo indica como registrado (estado %lld)"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3984,6 +6360,12 @@
     },
     "the volume serving the LUN": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "el volumen que sirve el LUN"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3994,6 +6376,12 @@
     },
     "this copy of the app is incomplete — its background service is missing. Reinstall from the disk image.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "esta copia de la app está incompleta: le falta el servicio en segundo plano. Reinstálala desde la imagen de disco."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4004,6 +6392,12 @@
     },
     "umount did not run": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "umount no se ejecutó"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4021,6 +6415,12 @@
             "value": "Clean up"
           }
         },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limpiar la caché"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4031,6 +6431,12 @@
     },
     "unregistered": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "registro anulado"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4041,6 +6447,12 @@
     },
     "unregistering before re-registering (the executable changed)": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "anulando el registro antes de volver a registrar (el ejecutable cambió)"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4051,6 +6463,12 @@
     },
     "waiting for approval in System Settings": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "esperando aprobación en Configuración del Sistema"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4061,6 +6479,12 @@
     },
     "was not enabled": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no estaba activada"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4071,6 +6495,12 @@
     },
     "was not set": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no estaba configurado"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4081,6 +6511,12 @@
     },
     "write reported success but the entry is not there on re-read": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la escritura indicó éxito, pero la entrada no aparece al volver a leer"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4091,6 +6527,12 @@
     },
     "wrote, but could not read the file back to confirm": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "se escribió, pero no se pudo volver a leer el archivo para confirmarlo"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4101,6 +6543,12 @@
     },
     "“%@” is connected but not formatted": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” está conectado, pero no tiene formato"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4111,6 +6559,12 @@
     },
     "“%@” is connected, but nothing mounted": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” está conectado, pero no se montó nada"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4121,6 +6575,12 @@
     },
     "“%@” is in use": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” está en uso"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4131,6 +6591,12 @@
     },
     "“%@” is in use and was not ejected": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” está en uso y no se expulsó"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4141,6 +6607,12 @@
     },
     "“%@” is not an address the target can be reached at.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” no es una dirección en la que se pueda acceder al destino."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4151,6 +6623,12 @@
     },
     "⚠ If the target loses power, this volume can be corrupted. Takes effect the next time this target is attached.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⚠ Si el destino se queda sin alimentación, este volumen puede dañarse. Se aplica la próxima vez que se conecte este destino."
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
