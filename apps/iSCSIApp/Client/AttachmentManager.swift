@@ -53,6 +53,9 @@ struct Attachment: Identifiable, Equatable, Sendable {
     /// Attached as a raw device (`TargetRecord.attachAsRawDevice`): the
     /// device is the whole of it, and nothing was mounted on purpose.
     var isRawDevice: Bool = false
+    /// Which engine serves the device, as `hdiutil info` reports it; nil
+    /// while there is no device.
+    var engine: ImageAttachEngine? = nil
 
     /// Up as far as it was meant to go: a mounted volume, or for a raw
     /// device, the device.
@@ -378,6 +381,8 @@ final class AttachmentManager: ObservableObject {
             let after = Self.unlockSavedVolumes(device: result.device, volumes: result.volumes)
             return (result.device, after.volumes, isBlank, after.locked)
         }.value
+        let served = probe.device == nil ? nil
+            : await Task.detached { Self.attachedEngine(forImage: imagePath) }.value
 
         // Recorded before anything else can go wrong: throwing after the
         // layers are up leaves them mounted but invisible — not listed, not
@@ -385,7 +390,7 @@ final class AttachmentManager: ObservableObject {
         let attachment = Attachment(tag: tag, targetID: targetID, hiddenPath: hiddenPath,
                                     device: probe.device, volumePaths: probe.volumes,
                                     isBlank: probe.isBlank, lockedVolumes: probe.locked,
-                                    isRawDevice: raw)
+                                    isRawDevice: raw, engine: served)
         attachments.removeAll { $0.tag == tag }
         attachments.append(attachment)
         attachmentsGeneration &+= 1
@@ -544,7 +549,8 @@ final class AttachmentManager: ObservableObject {
                     mountSource: candidate.source,
                     lockedVolumes: candidate.isRawDevice
                         ? [] : Self.lockedVolumes(device: device, ifNoneOf: volumes),
-                    isRawDevice: candidate.isRawDevice)
+                    isRawDevice: candidate.isRawDevice,
+                    engine: device == nil ? nil : Self.attachedEngine(forImage: candidate.imagePath))
             }
         }.value
         // Someone mutated the list while we were probing (a detach, an attach,
@@ -865,6 +871,19 @@ final class AttachmentManager: ObservableObject {
             }
         }
         return nil
+    }
+
+    /// Which engine serves the image, from the same `hdiutil info`, which
+    /// lists DiskImages2's images too. nil when the image is not attached.
+    nonisolated private static func attachedEngine(forImage path: String) -> ImageAttachEngine? {
+        guard let result = try? run("/usr/bin/hdiutil", ["info", "-plist"]),
+              result.status == 0,
+              let plist = try? PropertyListSerialization.propertyList(
+                from: result.stdout, format: nil) as? [String: Any],
+              let images = plist["images"] as? [[String: Any]],
+              let image = images.first(where: { $0["image-path"] as? String == path })
+        else { return nil }
+        return ImageAttachEngine.serving(hdiutilInfoImage: image)
     }
 
     /// Where a device's filesystems are mounted. Asks hdiutil, not

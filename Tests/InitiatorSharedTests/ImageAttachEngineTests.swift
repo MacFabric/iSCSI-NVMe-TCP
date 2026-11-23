@@ -36,4 +36,15 @@ struct ImageAttachEngineTests {
         #expect(ImageAttachEngine.choose(osMajor: 27, override: "fast") == .hdiutil)
         #expect(ImageAttachEngine.choose(osMajor: 27, override: "") == .hdiutil)
     }
+
+    @Test("hdiutil info's diskimages2 flag says which engine serves an image")
+    func servingEngine() {
+        // Keys as `hdiutil info -plist` gave them on 27.2.1, 2026-11-23.
+        #expect(ImageAttachEngine.serving(hdiutilInfoImage: ["diskimages2": true,
+                                                              "image-type": "read/write disk image"]) == .diskImages2)
+        #expect(ImageAttachEngine.serving(hdiutilInfoImage: ["diskimages2": false,
+                                                              "image-type": "read/write"]) == .hdiutil)
+        // An older macOS without the key is the old engine.
+        #expect(ImageAttachEngine.serving(hdiutilInfoImage: ["image-type": "read/write"]) == .hdiutil)
+    }
 }
