@@ -309,7 +309,7 @@ private struct TargetRow: View {
             } else if row.attachment != nil {
                 // Any layer up is something to detach: a blank LUN's raw
                 // device, or what a refused detach left listed.
-                if row.isAttached {
+                if row.isAttached, row.volumePath != nil {
                     Button(String(localized: "Reveal")) { model.reveal(row) }
                         .buttonStyle(.link)
                 }
@@ -374,6 +374,10 @@ private struct TargetRow: View {
     /// where it lives.
     private var subtitle: String {
         if let path = row.volumePath { return path }
+        if let attachment = row.attachment, attachment.isRawDevice,
+           let node = attachment.rawDeviceNode {
+            return String(localized: "raw device \(node) — nothing mounted")
+        }
         if let failure { return String(localized: "Could not attach at login — \(failure.message)") }
         if let attachment = row.attachment, let device = attachment.device {
             if let locked = attachment.lockedVolumes.first {
@@ -436,6 +440,8 @@ struct TargetEditor: View {
     @State private var localCacheGB: Int?
     /// Mirrors `TargetRecord.autoAttach`.
     @State private var autoAttach: Bool
+    /// Mirrors `TargetRecord.attachAsRawDevice`, with nil as false.
+    @State private var attachAsRawDevice: Bool
     /// The target's own answer to "which LUN?", from Find: REPORT LUNS (or
     /// the namespace list) with sizes. nil until asked. A Synology maps its
     /// first LUN at 1, and typing the default 0 there attaches a 32 KiB
@@ -473,6 +479,7 @@ struct TargetEditor: View {
         // A hand-edited out-of-range size shows as Off, which is what it is.
         _localCacheGB = State(initialValue: (target?.localCacheBytes ?? 0) > 0 ? target?.localCacheGB : nil)
         _autoAttach = State(initialValue: target?.autoAttach ?? false)
+        _attachAsRawDevice = State(initialValue: target?.attachAsRawDevice ?? false)
     }
 
     /// The protocol is the name's prefix and nothing else: `nqn.` is
@@ -714,6 +721,17 @@ struct TargetEditor: View {
                     Text(String(localized: "Kept on this Mac's disk, encrypted, only while the target is attached. Takes effect the next time it is attached."))
                         .font(.caption).foregroundStyle(.secondary)
                 }
+
+                Section {
+                    Toggle(String(localized: "Attach as a raw device"), isOn: $attachAsRawDevice)
+                } header: {
+                    Text(String(localized: "Volumes"))
+                } footer: {
+                    Text(attachAsRawDevice
+                         ? String(localized: "Nothing on the disk is mounted on this Mac. It appears only as /dev/rdiskN, for a virtual machine or another app that uses the whole disk. A flush sent to the device does not reach the target, so Commit writes above is what keeps its writes safe. Takes effect the next time it is attached.")
+                         : String(localized: "Its volumes mount in Finder. Takes effect the next time it is attached."))
+                        .font(.caption).foregroundStyle(.secondary)
+                }
             }
             .formStyle(.grouped)
             .onChange(of: flushInterval) { old, new in
@@ -929,7 +947,9 @@ struct TargetEditor: View {
             flushIntervalSeconds: flushInterval,
             networkInterface: networkInterface,
             interfaceFallback: networkInterface == nil ? nil : interfaceFallback,
-            localCacheGB: localCacheGB)
+            localCacheGB: localCacheGB,
+            // Stored only when on, so a record nobody switched keeps no key.
+            attachAsRawDevice: attachAsRawDevice ? true : nil)
 
         LastPortal.remember(host: record.host, port: record.port, nvme: isNVMe)
         Task {

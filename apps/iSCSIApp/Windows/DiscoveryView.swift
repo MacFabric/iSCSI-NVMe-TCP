@@ -115,7 +115,18 @@ struct DiscoveryView: View {
                     Spacer()
                     switch offer(for: target, from: lastSearch) {
                     case .add:
-                        Button(String(localized: "Add")) { if let lastSearch { add(target, from: lastSearch) } }
+                        // A pull-down on the Add button rather than a second
+                        // button per row: most targets are volumes in Finder,
+                        // and the raw device is the exception a VM user wants.
+                        Menu(String(localized: "Add")) {
+                            Button(String(localized: "Add as a Raw Device")) {
+                                if let lastSearch { add(target, from: lastSearch, asRawDevice: true) }
+                            }
+                        } primaryAction: {
+                            if let lastSearch { add(target, from: lastSearch) }
+                        }
+                        .fixedSize()
+                        .help(String(localized: "Add mounts its volumes in Finder. Add as a Raw Device leaves the disk unmounted, as /dev/rdiskN, for a virtual machine."))
                     case .saved:
                         Text(String(localized: "Added")).font(.caption).foregroundStyle(.secondary)
                     case .updateCredentials(let records):
@@ -212,7 +223,7 @@ struct DiscoveryView: View {
         }
     }
 
-    private func add(_ target: DiscoveredTargetInfo, from search: Search) {
+    private func add(_ target: DiscoveredTargetInfo, from search: Search, asRawDevice: Bool = false) {
         // Carry the discovery credentials and interface onto the target: a portal
         // that needed them to list its targets will need them to log in, and asking twice
         // for the same secret is the kind of thing that makes people give up.
@@ -226,7 +237,8 @@ struct DiscoveryView: View {
             lun: search.isNVMe ? 1 : 0,
             chapUser: search.chapUser.isEmpty ? nil : search.chapUser,
             networkInterface: search.networkInterface,
-            interfaceFallback: search.networkInterface == nil ? nil : search.interfaceFallback)
+            interfaceFallback: search.networkInterface == nil ? nil : search.interfaceFallback,
+            attachAsRawDevice: asRawDevice ? true : nil)
         Task { await model.save(record, secret: search.chapSecret.isEmpty ? nil : search.chapSecret) }
     }
 

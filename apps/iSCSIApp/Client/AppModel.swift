@@ -474,7 +474,10 @@ final class AppModel: ObservableObject {
                 // from an app that has files open on it.
                 let volume = attachment.volumePaths.first
                     .map { URL(fileURLWithPath: $0).lastPathComponent } ?? name
-                guard ForceEjectPrompt.confirm(volume: volume, detail: detail) else { return }
+                guard ForceEjectPrompt.confirm(
+                    volume: volume, detail: detail,
+                    rawDevice: attachment.isRawDevice ? attachment.rawDeviceNode : nil)
+                else { return }
                 try await attachments.detach(tag: attachment.tag, force: true)
             }
             sessions = try await DaemonConnection.sessions()
@@ -529,18 +532,33 @@ extension TargetRecord {
 /// bar with no window open to hold one.
 @MainActor
 enum ForceEjectPrompt {
-    static func confirm(volume: String, detail: String) -> Bool {
+    /// `rawDevice`: the node of a disk attached as a raw device, which has no
+    /// volume for anyone to have files open on. What holds it open is a
+    /// virtual machine or a tool using the whole disk, and forcing it away
+    /// from a running guest is pulling the disk out of a running computer.
+    static func confirm(volume: String, detail: String, rawDevice: String? = nil) -> Bool {
         NSApp.activate()
         let alert = NSAlert()
         alert.alertStyle = .warning
         alert.messageText = String(localized: "“\(volume)” is in use and was not ejected")
-        alert.informativeText = String(localized: """
-            \(detail)
+        if let rawDevice {
+            alert.informativeText = String(localized: """
+                A virtual machine or another app has \(rawDevice) open. Shut it \
+                down first, then detach.
 
-            Force Eject takes the volume away from whatever is using it. \
-            Anything those apps have not saved is lost, and a file being \
-            written at that moment can be left incomplete.
-            """)
+                Force Eject takes the disk away from it. A guest system loses \
+                whatever it has not written yet, and its filesystem can be left \
+                damaged.
+                """)
+        } else {
+            alert.informativeText = String(localized: """
+                \(detail)
+
+                Force Eject takes the volume away from whatever is using it. \
+                Anything those apps have not saved is lost, and a file being \
+                written at that moment can be left incomplete.
+                """)
+        }
         alert.addButton(withTitle: String(localized: "Cancel"))
         let force = alert.addButton(withTitle: String(localized: "Force Eject"))
         force.hasDestructiveAction = true

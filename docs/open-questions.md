@@ -1710,7 +1710,10 @@ and the simulator, which has no log device, reproduces it.
 - *Can:* keep the disk fast, since the stall is the backlog divided by what
   the throttled sync is allowed; document that a virtual machine is
   better given the raw device of an attached disk with no volume on it than
-  an image file on an attached volume (shown above with QEMU), and, once
+  an image file on an attached volume (shown above with QEMU and the
+  framework; a target can now be attached that way, with nothing mounted
+  whatever it holds: Discover's "Add as a Raw Device", or the editor's
+  "Attach as a raw device"), and, once
   each has been tried with a guest, that an image file is better kept on
   ExFAT than on APFS and that a hypervisor started with `taskpolicy -d
   passive` does not set the stall off; and, if it earns its
