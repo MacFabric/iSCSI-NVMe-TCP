@@ -343,6 +343,22 @@
         }
       }
     },
+    "A virtual machine or another app has %@ open. Shut it down first, then detach.\n\nForce Eject takes the disk away from it. A guest system loses whatever it has not written yet, and its filesystem can be left damaged.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una máquina virtual u otra app tiene %@ abierto. Apágala primero y luego desconecta.\n\nForzar expulsión le quita el disco. El sistema invitado pierde todo lo que aún no haya escrito, y su sistema de archivos puede quedar dañado."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "某个虚拟机或其他应用正在使用 %1$@。请先将其关闭，再断开。\n\n强制推出会直接从它手中拿走磁盘。客户机系统会丢失尚未写入的数据，其文件系统也可能损坏。"
+          }
+        }
+      }
+    },
     "Accept the Risk": {
       "localizations": {
         "es": {
@@ -439,6 +455,22 @@
         }
       }
     },
+    "Add as a Raw Device": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar como dispositivo sin procesar"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作为原始设备添加"
+          }
+        }
+      }
+    },
     "Add it to the subsystem's allowed hosts on the storage device, or allow any host there. Namespace IDs start at 1.": {
       "localizations": {
         "es": {
@@ -467,6 +499,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "请在存储设备上，将此标识加入目标的允许发起端列表，或允许任意发起端连接。此标识随 Mac 名称生成，更改 Mac 名称后也会改变。"
+          }
+        }
+      }
+    },
+    "Add mounts its volumes in Finder. Add as a Raw Device leaves the disk unmounted, as /dev/rdiskN, for a virtual machine.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar monta sus volúmenes en el Finder. Agregar como dispositivo sin procesar deja el disco sin montar, como /dev/rdiskN, para una máquina virtual."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“添加”会在 Finder 中挂载其卷。“作为原始设备添加”不挂载磁盘，只以 /dev/rdiskN 的形式提供给虚拟机。"
           }
         }
       }
@@ -615,6 +663,22 @@
         }
       }
     },
+    "Attach as a raw device": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectar como dispositivo sin procesar"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以原始设备挂载"
+          }
+        }
+      }
+    },
     "Attach at login": {
       "localizations": {
         "es": {
@@ -659,6 +723,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "登录时自动挂载需要将应用放在 /Applications 中。"
+          }
+        }
+      }
+    },
+    "Attached as": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectado como"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "挂载方式"
           }
         }
       }
@@ -1639,6 +1719,22 @@
         }
       }
     },
+    "Disk, nothing mounted": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disco, nada montado"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "磁盘，未挂载任何卷"
+          }
+        }
+      }
+    },
     "DiskImages2 attach failed: %@": {
       "localizations": {
         "es": {
@@ -1907,6 +2003,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "目标端已启用"
+          }
+        }
+      }
+    },
+    "Engine": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Motor"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "引擎"
           }
         }
       }
@@ -2391,6 +2503,22 @@
         }
       }
     },
+    "Its volumes mount in Finder. Takes effect the next time it is attached.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sus volúmenes se montan en el Finder. Se aplica la próxima vez que se conecte."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其卷会在 Finder 中挂载。下次挂载时生效。"
+          }
+        }
+      }
+    },
     "Keep the original diagnostic below and report this issue.": {
       "localizations": {
         "es": {
@@ -2499,6 +2627,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "本地缓存"
+          }
+        }
+      }
+    },
+    "Mounted at": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Montado en"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "挂载位置"
           }
         }
       }
@@ -2794,6 +2938,22 @@
         }
       }
     },
+    "Not attached as a disk": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No conectado como disco"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未作为磁盘挂载"
+          }
+        }
+      }
+    },
     "Not now": {
       "localizations": {
         "es": {
@@ -2822,6 +2982,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "未提供"
+          }
+        }
+      }
+    },
+    "Nothing on the disk is mounted on this Mac. It appears only as /dev/rdiskN, for a virtual machine or another app that uses the whole disk. A flush sent to the device does not reach the target, so Commit writes above is what keeps its writes safe. Takes effect the next time it is attached.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En esta Mac no se monta nada del disco. Solo aparece como /dev/rdiskN, para una máquina virtual u otra app que use el disco completo. Un vaciado de caché enviado al dispositivo no llega al destino, así que lo que protege sus escrituras es Consolidar escrituras, más arriba. Se aplica la próxima vez que se conecte."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此 Mac 不会挂载磁盘上的任何内容。它只以 /dev/rdiskN 的形式出现，供虚拟机或使用整个磁盘的其他应用使用。发送到该设备的缓存刷新请求不会到达目标，因此写入安全取决于上方的“提交写入”设置。下次挂载时生效。"
           }
         }
       }
@@ -2886,6 +3062,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "每次写入时提交（最安全）"
+          }
+        }
+      }
+    },
+    "On this Mac": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En esta Mac"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在此 Mac 上"
           }
         }
       }
@@ -3142,6 +3334,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "现在退出将安装版本 %1$@"
+          }
+        }
+      }
+    },
+    "Raw device, nothing mounted": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispositivo sin procesar, nada montado"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原始设备，未挂载任何卷"
           }
         }
       }
@@ -4826,6 +5034,22 @@
         }
       }
     },
+    "Volumes": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volúmenes"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "卷"
+          }
+        }
+      }
+    },
     "Volumes are unmounted first, and nothing is forced. If something is using a volume, removal stops and says so.": {
       "localizations": {
         "es": {
@@ -4838,6 +5062,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "首先卸载已挂载的卷，不会强制推出。若有卷正在使用中，移除操作会停止并说明原因。"
+          }
+        }
+      }
+    },
+    "Volumes in Finder": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volúmenes en el Finder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finder 中的卷"
           }
         }
       }
@@ -5890,6 +6130,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "查询失败：%1$@"
+          }
+        }
+      }
+    },
+    "raw device %@ — nothing mounted": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dispositivo sin procesar %@ — nada montado"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原始设备 %1$@ — 未挂载任何卷"
           }
         }
       }
