@@ -1594,9 +1594,31 @@ The control writers here never stalled past 8.2 s, so this Mac was in the
 mild state; on VM 27 the guests on an image file reached 27 s in the severe
 one. Within this Mac, the engines made no difference worth reading.
 
-Not tried: the raw device under the framework against an initiator disk
-(it opens one, `VZDiskBlockDeviceStorageDeviceAttachment`), the severe
-state on a real Mac (it needs a reboot), and QEMU with `cache=none`.
+**On the raw device of a blank attached LUN, neither hypervisor is held,
+and both run ten times faster** (same Mac and state, an hour later;
+`name-testing` over NVMe/TCP, blanked at both ends, attached with
+`hdiutil` and left with no volume; the framework through
+`VZDiskBlockDeviceStorageDeviceAttachment` on `/dev/rdiskN`, opened
+without root because `hdiutil` gives the nodes to the attaching account;
+the guest's random data read back from the device afterwards). Alone,
+1 GiB; beside the same two writers on `ssd-vms`, 4 GiB so the guest
+overlapped most of their run:
+
+| guest on the raw device | alone | beside two writers: longest write | throughput beside them |
+|---|---|---|---|
+| framework | 82.4 MiB/s, longest 0.64 s | 0.63, 1.03 s | 80.0, 80.2 MiB/s |
+| QEMU, default | 95.3 MiB/s, longest 0.10 s | 0.90, 1.06 s | 65.6, 70.4 MiB/s |
+| QEMU, `cache=none` | 95.2 MiB/s, longest 0.09 s | | |
+
+The writers beside them on the APFS volume were held up to 4.0 s, and the
+three-writer control afterwards up to 8.2 s, so the stall was there to be
+met. The same LUN path that gives an image-file guest 7 to 10 MiB/s gives
+a raw-device guest 80 to 95: the cost of an image file on an attached
+volume is APFS above the disk, not the initiator under it. The raw device
+still has no flush (above), so durability is the target's flush policy.
+
+Not tried: the raw device in the severe state on a real Mac (it needs a
+reboot).
 
 **Flushing the volume ourselves, at normal priority, helps and does not
 cure** (`sync_volume_np` on the volume every 3 s from an unprivileged
@@ -1673,8 +1695,8 @@ and the simulator, which has no log device, reproduces it.
 
 **How to attack it next.**
 
-1. On a real Mac: the framework on the raw device of a blank attached LUN,
-   just after a reboot; QEMU's `cache=none`; ExFAT; a hypervisor under
+1. On a real Mac just after a reboot: the raw device of a blank attached
+   LUN under the framework (fine in the mild state); ExFAT; a hypervisor under
    `taskpolicy -d passive`. And trace where the framework's uncached writes
    spend their time.
 2. Find the switch: a spindump of launchd's sync in each state, to see
