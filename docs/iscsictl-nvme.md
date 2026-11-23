@@ -73,6 +73,25 @@ lines to stderr. Level 1 summarizes connection setup and each command with its
 outcome. Level 2 adds the fields of every PDU. `add`, `remove`, `attach` and `detach` have
 no trace, because the daemon does that work.
 
+`nvme read-bench` also logs its options and the read call chain through
+`NVMeBlockDevice`, `NVMeController`, and `NVMeQueue` at either level. Lines carry
+the producing thread ID (`tid`); connection UUIDs and command IDs (`cid`) link
+queue submissions and completions to their wire traces. Read diagnostics include
+the byte offset, LBA, transfer limits, chunk sizes, and received byte counts.
+
+```sh
+swift run iscsictl nvme read-bench 127.0.0.1 \
+  --subsystem nqn.2026-08.me.herko.sim:disk0 \
+  --megabytes 16 --queue-depth 4 --log-level 1 2>read-bench.log
+```
+
+Omit `--log-level` for throughput measurements without tracing. `--debug` is
+equivalent to level 2 unless an explicit `--log-level` is supplied. Trace
+formatting still contributes to measured time, but stderr writes run on a
+separate serial queue with at most 1,024 pending lines. Overflow is dropped and
+reported when the queue drains. At exit the command waits at most one second
+for the writer, so a slow consumer may lose final lines.
+
 ### NVMeKit source dependency
 
 SwiftPM and Xcode both use the checked-in `Vendor/NVMeKit` package, which

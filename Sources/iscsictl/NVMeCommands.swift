@@ -1,5 +1,8 @@
 import ArgumentParser
+import Darwin
+import Dispatch
 import Foundation
+import os
 import NVMeKit
 import iSCSIDaemon
 import InitiatorShared
@@ -27,6 +30,49 @@ struct NVMe: AsyncParsableCommand {
     }
 }
 
+/// Keep stderr backpressure outside controller deadlines and cap queued output.
+private final class ReadBenchLogWriter: Sendable {
+    private let writer = DispatchQueue(label: "iscsictl.nvme.read-bench.stderr")
+    private let available = DispatchSemaphore(value: 1024)
+    private let dropped = OSAllocatedUnfairLock(initialState: 0)
+    private let stderrWritable = OSAllocatedUnfairLock(
+        initialState: fcntl(STDERR_FILENO, F_SETNOSIGPIPE, 1) != -1)
+
+    func enqueue(_ data: @autoclosure () -> Data) {
+        guard stderrWritable.withLock({ $0 }) else { return }
+        guard available.wait(timeout: .now()) == .success else {
+            dropped.withLock { $0 += 1 }
+            return
+        }
+        let line = data()
+        writer.async { [self] in
+            defer { available.signal() }
+            write(line)
+        }
+    }
+
+    func flush() {
+        let drained = DispatchSemaphore(value: 0)
+        writer.async { [self] in
+            defer { drained.signal() }
+            let count = dropped.withLock { $0 }
+            if count > 0 {
+                write(Data("read-bench: dropped \(count) trace lines while stderr was busy\n".utf8))
+            }
+        }
+        _ = drained.wait(timeout: .now() + .seconds(1))
+    }
+
+    private func write(_ line: Data) {
+        guard stderrWritable.withLock({ $0 }) else { return }
+        do {
+            try FileHandle.standardError.write(contentsOf: line)
+        } catch {
+            stderrWritable.withLock { $0 = false }
+        }
+    }
+}
+
 struct NVMeOptions: ParsableArguments {
     @Argument(help: "Subsystem host (IP or DNS name).")
     var host: String
@@ -48,7 +94,7 @@ struct NVMeOptions: ParsableArguments {
         case debug = 2
     }
 
-    @Option(help: "Trace to stderr: 1 = Useful log (connection and command summaries), 2 = Debug log (includes level 1 and protocol PDU fields).")
+    @Option(help: "Trace to stderr: 1 = Useful log (connection and command summaries, plus read-bench function calls), 2 = Debug log (includes level 1 and protocol PDU fields).")
     var logLevel: LogLevel?
 
     @Flag(help: .hidden) var debug = false
@@ -59,8 +105,19 @@ struct NVMeOptions: ParsableArguments {
         timeZoneSeparator: .colon, includingFractionalSeconds: true, timeZone: .current)
 
     func writeLog(_ message: String) {
-        let timestamp = effectiveLevel == nil ? "" : Date.now.formatted(Self.logTimeFormat) + " "
-        FileHandle.standardError.write(Data((timestamp + message + "\n").utf8))
+        FileHandle.standardError.write(logLine(message))
+    }
+
+    fileprivate func logLine(_ message: String) -> Data {
+        var prefix = ""
+        if effectiveLevel != nil {
+            let timestamp = Date.now.formatted(Self.logTimeFormat)
+            var threadID: UInt64 = 0
+            let status = pthread_threadid_np(nil, &threadID)
+            let thread = status == 0 ? String(threadID) : "unknown"
+            prefix = "\(timestamp) [tid=\(thread)] "
+        }
+        return Data((prefix + message + "\n").utf8)
     }
 
     func identity() throws -> NVMeHostIdentity {
@@ -80,29 +137,37 @@ struct NVMeOptions: ParsableArguments {
             + "Omit to let macOS routing choose."))
     var interface: String?
 
-    func openTransport() async throws -> any ConnectionTransport {
+    func openTransport(log: (@Sendable (String) -> Void)? = nil) async throws -> any ConnectionTransport {
+        let emit = log ?? writeLog
         #if canImport(Network)
         let tcp = try await NetworkTransport.connect(
             host: host, port: port,
             binding: InterfaceBinding.named(interface, fallback: false))
         if interface != nil {
-            writeLog("connected via \(tcp.connectedPath.interfaceName ?? "an unknown interface")")
+            emit("connected via \(tcp.connectedPath.interfaceName ?? "an unknown interface")")
         }
         guard let level = effectiveLevel else { return tcp }
-        writeLog("Connected to \(host):\(port) over TCP")
+        let connectionID = log.map { _ in UUID() }
+        let connection = connectionID.map { " connection=\($0.uuidString)" } ?? ""
+        emit("Connected to \(host):\(port) over TCP\(connection)")
         // A refused Connect reads as what to change on the NAS, the way the
         // app words it, rather than as bare status codes.
-        return NVMeTracingTransport(tcp, label: host, level: level == .debug ? .debug : .useful, sink: writeLog,
+        return NVMeTracingTransport(tcp, label: host, level: level == .debug ? .debug : .useful,
+                                    connectionID: connectionID, sink: emit,
                                     describeFailure: { ISCSIError.nsError(from: $0).localizedDescription })
         #else
         throw ValidationError("Network.framework unavailable on this platform")
         #endif
     }
 
-    func controller(subsystem: String) throws -> NVMeController {
+    fileprivate var traceEnabled: Bool { effectiveLevel != nil }
+
+    func controller(subsystem: String, debugLog: (@Sendable (String) -> Void)? = nil,
+                    transportLog: (@Sendable (String) -> Void)? = nil) throws -> NVMeController {
         var config = NVMeControllerConfig(host: try identity(), subsystemNQN: subsystem)
         config.requestDigests = !noDigests
-        return NVMeController(config: config) { try await openTransport() }
+        config.debugLog = debugLog
+        return NVMeController(config: config) { try await openTransport(log: transportLog) }
     }
 }
 
@@ -248,7 +313,8 @@ private func hexdump(_ data: Data, base: UInt64) {
 struct NVMeReadBench: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "read-bench",
-        abstract: "Sequential read throughput over raw NVMe/TCP (no filesystem, no disk image)."
+        abstract: "Sequential read throughput over raw NVMe/TCP (no filesystem, no disk image).",
+        discussion: "Trace output is buffered. Log formatting still occurs during the measurement. At exit, the command waits up to one second for buffered traces and may discard remaining lines."
     )
 
     @OptionGroup var options: NVMeOptions
@@ -276,7 +342,25 @@ struct NVMeReadBench: AsyncParsableCommand {
 
     func run() async throws {
         guard queueDepth >= 1 else { throw ValidationError("--queue-depth must be at least 1") }
-        let controller = try options.controller(subsystem: subsystem)
+        let writer = options.traceEnabled ? ReadBenchLogWriter() : nil
+        defer { writer?.flush() }
+        let transportLog: (@Sendable (String) -> Void)?
+        let debugLog: (@Sendable (String) -> Void)?
+        if let writer {
+            let log: @Sendable (String) -> Void = { [options] message in
+                writer.enqueue(options.logLine(message))
+            }
+            transportLog = log
+            debugLog = { [host = options.host] message in log("[\(host)] \(message)") }
+        } else {
+            transportLog = nil
+            debugLog = nil
+        }
+        debugLog?("NVMeReadBench.\(#function) subsystem=\(subsystem) port=\(options.port) nsid=\(nsid) "
+                  + "megabytes=\(megabytes) offsetMB=\(offsetMB) chunk=\(chunk) "
+                  + "queueDepth=\(queueDepth) maxTransfer=\(maxTransfer)")
+        let controller = try options.controller(subsystem: subsystem, debugLog: debugLog,
+                                               transportLog: transportLog)
         try await controller.activate()
         let device = NVMeBlockDevice(controller: controller, nsid: nsid, maxTransferBytes: maxTransfer)
         let (blockSize, blockCount) = try await device.readCapacity()
