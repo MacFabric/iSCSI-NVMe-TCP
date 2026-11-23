@@ -1521,6 +1521,29 @@ it, against 12.9 and 28.7 s without, and 22 s twice just before. Each flush
 took about 10 s on this disk and holds each file for about 3 s as it passes,
 so it trades one long stall for a steady supply of short ones.
 
+**Whose I/O priority matters: the writers', not ours.** After another reboot,
+alternated on APFS: with ordinary writers the stalls were 28.3 s (after one
+of 19.4 s) and 35.1 s; with the same writers started under `taskpolicy -d
+passive` they were 3.1 and 2.9 s. Passive I/O is the kind the kernel does
+not count as a reason to throttle anything else, so the sync was never held
+back. That is also why setting an I/O policy on the daemon or the extension
+cannot help: `setiopolicy_np` changes the calling process or thread only,
+the throttled thread is launchd's, and what triggers its throttling is the
+foreground I/O of whichever application is writing to the volume.
+
+**ExFAT is mostly spared.** The same disk formatted ExFAT, which macOS 27
+mounts through its own FSKit module, in the first five minutes after a
+reboot: five runs, one with a 35 s stalled write beside a 35 s sync (the
+first run after the format) and four with no write over 5 ms and syncs of
+0.2 to 0.3 s. It also wrote faster, about 15 MiB/s against 11 on APFS in
+the same window. APFS on the same disk a minute later stalled 16 and 34 s.
+
+**A flush every second is no better than one every three.** Each flush
+takes 9 to 12 s on this disk, so the interval is never reached and the
+flushing is continuous either way: one run of two still had a 24 s stall,
+and both had four to seven pauses of 3 to 4 s. Over both intervals, two
+runs of five kept a long stall, against every run without.
+
 **What is still not established.**
 
 - *What switches the stall between severe and mild.* At one disk speed it
@@ -1552,10 +1575,16 @@ and the simulator, which has no log device, reproduces it.
   the machine. launchd's sync cannot be turned off or made to skip a
   volume.
 - *Can:* keep the disk fast, since the stall is the backlog divided by what
-  the throttled sync is allowed; document that a virtual machine is better
-  given the raw device than an image file on an attached volume, once that
-  has been tried with a real hypervisor; and, if it earns its place, run the
-  periodic flush above from the app for volumes it attached.
+  the throttled sync is allowed; document, once each has been tried with a
+  real hypervisor, that a virtual machine is better given the raw device
+  than an image file on an attached volume, that an image file is better
+  kept on ExFAT than on APFS, and that a hypervisor started with
+  `taskpolicy -d passive` does not set the stall off; and, if it earns its
+  place, run the periodic flush above from the app for volumes it attached.
+- *Could, at a price:* have the daemon, which is root, turn the kernel's
+  throttle off (`debug.lowpri_throttle_enabled=0`) while a volume is
+  attached. It works, and it changes background I/O on every disk the Mac
+  has, through a `debug.` sysctl nobody promised to keep.
 
 **How to attack it next.**
 
@@ -1578,6 +1607,30 @@ spindump -notarget 3 10 -file …` is the capture that found it, since
 filesys launchd` times the syncs. A sync holds the newest file longest, so
 a script that times only its first writer sees nothing. And in zsh, a
 variable called `path` is `PATH`.
+
+## 22. Erasing an attached disk while the app is running gets it detached mid-erase (2026-11-22)
+
+Found by accident during item 21. `diskutil eraseDisk ExFAT … /dev/disk7` on
+a disk attached through `iscsictl nvme attach`, with the app running on the
+same account: the erase unmounts the volume, the app logs "after a Finder
+eject of /Volumes/FreshC: forcing the layers beneath it", unmounts the FSKit
+volume and logs out of the target, and `diskutil` then waits forever on a
+disk that is gone (ten minutes before it was killed). The app's own line
+that follows, "Detaching did not finish: /dev/disk7 is still attached", says
+it noticed something was off and carried on.
+
+The eject handler cannot tell a volume the user ejected from one that is
+being erased or repartitioned. Seen once, on 27.2.1 with build 57.4. Several
+erases the same day went through, all either with the app not running or
+within a minute of login.
+
+**Not known:** whether Disk Utility's Erase does the same as `diskutil`
+here, which is how a person would meet it; and whether the same happens to a
+disk the app attached itself, as opposed to one attached by `iscsictl`.
+
+**How to test.** Attach a scratch target in the app, then Erase it in Disk
+Utility and with `diskutil eraseDisk`, app running. Expect the erase to
+finish and the disk to stay attached.
 
 ## A note on method
 
