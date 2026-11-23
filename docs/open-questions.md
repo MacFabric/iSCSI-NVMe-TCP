@@ -1534,9 +1534,32 @@ blank simulator LUN, the app running; `scripts/raw-device-check.py`):
   and with a relaxed policy a guest that flushed has been told a lie.
 - The device advertises unmap, and neither FUA nor barriers.
 
-Still owed: a real guest. VM 27 has no hypervisor (`kern.hv_support` is 0 in
-a macOS guest), so it would be QEMU emulating the processor there, whose disk
-path is the same as an accelerated one's.
+**A guest on the raw device is not stalled; one on an image file is**
+(27.2.1, 4 cores, rebooted for the severe state; two simulator disks
+slowed to about 11 MiB/s, one APFS with a sparse image file on it, one
+blank; an Alpine Linux guest in QEMU 11.1.3 writing 768 MiB to its disk in
+4 MiB direct writes, each timed inside the guest; QEMU emulates the
+processor here, since a macOS guest has no hypervisor, but its disk path is
+the ordinary one; `scripts/write-stall-guest.py`). The state was confirmed
+severe before and after with three buffered writers (23.8 and 43.2 s).
+
+| guest's disk | alone: longest write | beside two writers on the APFS volume: longest write | throughput beside them |
+|---|---|---|---|
+| image file on APFS | 1.8, 0.9, 1.6 s | **26.3, 5.1, 26.8 s** | 7.7 to 8.1 MiB/s |
+| raw device `/dev/rdiskN` | 0.39, 0.38, 0.44 s | 0.38, 0.44, 0.39 s | 13.5 to 13.8 MiB/s |
+
+Alone, the guest is the only writer on its volume and launchd's syncs stay
+at 4 s or less, so even the image file gets through. Beside other writers
+it is the volume's slowest writer and the one held. On the raw device it
+was never held, while the writers beside it on the APFS volume still were
+(12.0 and 8.6 s). The Linux guest logged nothing about either stall; a
+guest with a disk timeout under 27 s would have, and the FreeBSD guest in
+the DiskImages2 case above panicked on one of 10 s.
+
+Not tried: Apple's Virtualization framework (UTM's "Apple" machines), whose
+caching mode for an image file may not be QEMU's default; QEMU with
+`cache=none`; and a real accelerated guest, which needs a Mac that is not
+itself a VM.
 
 **Flushing the volume ourselves, at normal priority, helps and does not
 cure** (`sync_volume_np` on the volume every 3 s from an unprivileged
@@ -1599,11 +1622,12 @@ and the simulator, which has no log device, reproduces it.
   the machine. launchd's sync cannot be turned off or made to skip a
   volume.
 - *Can:* keep the disk fast, since the stall is the backlog divided by what
-  the throttled sync is allowed; document, once each has been tried with a
-  real hypervisor, that a virtual machine is better given the raw device
-  than an image file on an attached volume, that an image file is better
-  kept on ExFAT than on APFS, and that a hypervisor started with
-  `taskpolicy -d passive` does not set the stall off; and, if it earns its
+  the throttled sync is allowed; document that a virtual machine is
+  better given the raw device of an attached disk with no volume on it than
+  an image file on an attached volume (shown above with QEMU), and, once
+  each has been tried with a guest, that an image file is better kept on
+  ExFAT than on APFS and that a hypervisor started with `taskpolicy -d
+  passive` does not set the stall off; and, if it earns its
   place, run the periodic flush above from the app for volumes it attached.
 - *Could, at a price:* have the daemon, which is root, turn the kernel's
   throttle off (`debug.lowpri_throttle_enabled=0`) while a volume is
@@ -1612,8 +1636,8 @@ and the simulator, which has no log device, reproduces it.
 
 **How to attack it next.**
 
-1. A real guest on the raw device and on an image file, in the severe state
-   (straight after a reboot is the one reliable way in).
+1. The same guest test with the Virtualization framework, with QEMU's
+   `cache=none`, on ExFAT, and with QEMU under `taskpolicy -d passive`.
 2. Find the switch: a spindump of launchd's sync in each state, to see
    whether it is sleeping in the throttle or not.
 3. DiskImages2 against `hdiutil` in the first ten minutes after a reboot,
@@ -1625,7 +1649,9 @@ others did meanwhile, a capture command when a write is stuck),
 `mixed-load.py`), `scripts/write-stall-single.py` (one measured writer,
 appending or in place, aligned or not, against competitors),
 `scripts/write-stall-flusher.py` (the periodic volume flush) and
-`scripts/write-stall-raw.py` (writers on a raw device; destroys it). `sudo
+`scripts/write-stall-raw.py` (writers on a raw device; destroys it),
+`scripts/raw-device-check.py` (what a hypervisor meets on the raw device)
+and `scripts/write-stall-guest.py` (a QEMU guest's writes). `sudo
 spindump -notarget 3 10 -file …` is the capture that found it, since
 `sample` cannot see the kernel frames that matter, and `sudo fs_usage -w -f
 filesys launchd` times the syncs. A sync holds the newest file longest, so
