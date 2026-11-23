@@ -1620,6 +1620,33 @@ still has no flush (above), so durability is the target's flush policy.
 Not tried: the raw device in the severe state on a real Mac (it needs a
 reboot).
 
+**On HFS+ the image-file guests are not held either, and run two to four
+times faster than on APFS** (same Mac and state, the same hour; `ssd-vms`
+erased as journaled HFS+ with the app quit, still attached with `hdiutil`;
+`probe` and the two-round suite unchanged from the APFS runs above). One
+run of each, and the APFS figures are from the evening before:
+
+| guest, image file | APFS (`hdiutil`) | HFS+ |
+|---|---|---|
+| QEMU default, 128 MiB alone | 6.6 MiB/s, longest 3.6 s | 24.3 MiB/s, longest 0.65 s |
+| framework `cached`, 128 MiB alone | 9.2 MiB/s, longest 1.1 s | 41.7 MiB/s, longest 0.44 s |
+| framework `automatic`, 128 MiB alone | 1.2 MiB/s, 14 writes of 3 s or more | 1.3 MiB/s, 16 |
+| framework `cached`, 512 MiB alone | 6.3, 6.6 MiB/s | 26.6, 18.1 MiB/s |
+| QEMU default, 512 MiB alone | 6.3 MiB/s | 19.0, 29.0 MiB/s |
+| framework `cached` beside two writers: longest | 8.8, 6.3 s | 1.38, 2.11 s |
+| QEMU default beside two writers: longest | 5.9, 9.0 s | 1.87, 1.93 s |
+| framework `automatic` beside two writers: longest | 76.6 s | **31.5 s** |
+| three-writer control: longest `write()` | 7.5 s | 1.65 s |
+
+On HFS+ the writers' `write()` calls were never held past 3.0 s, but
+their `F_FULLFSYNC` calls took 3 to 7 s at the median and up to 22.6 s:
+the wait moved from the write into the flush the writer asked for, which
+is where a writer expects it. The framework's default mode is no better
+on HFS+, 1.0 to 1.4 MiB/s, and its first write beside the writers was
+again held as long as they ran (31.5 s against their 34.3 s), so that
+starvation is the framework's uncached path, not APFS. Not tried: HFS+ in
+the severe state.
+
 **Flushing the volume ourselves, at normal priority, helps and does not
 cure** (`sync_volume_np` on the volume every 3 s from an unprivileged
 process, severe state, alternated): longest stall 3.4, 11.0 and 3.3 s with
@@ -1696,7 +1723,8 @@ and the simulator, which has no log device, reproduces it.
 **How to attack it next.**
 
 1. On a real Mac just after a reboot: the raw device of a blank attached
-   LUN under the framework (fine in the mild state); ExFAT; a hypervisor under
+   LUN under the framework (fine in the mild state); HFS+ (fine in the
+   mild state); ExFAT; a hypervisor under
    `taskpolicy -d passive`. And trace where the framework's uncached writes
    spend their time.
 2. Find the switch: a spindump of launchd's sync in each state, to see
