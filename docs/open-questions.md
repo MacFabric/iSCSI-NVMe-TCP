@@ -1514,6 +1514,30 @@ and steady; the whole effect is in the layer above it. A filesystem cannot
 be mounted from `/dev/rdiskN`, but a virtual machine can be handed one as
 its disk, which takes APFS, its buffering and this lock out of the path.
 
+**What a hypervisor would meet on that device** (27.2.1, `hdiutil`, a
+blank simulator LUN, the app running; `scripts/raw-device-check.py`):
+
+- *It needs no root.* `/dev/diskN` and `/dev/rdiskN` belong to the account
+  that attached, mode 640, as `hdiutil` leaves any image's nodes.
+- *The LUN must hold nothing macOS mounts.* A blank one stays attached with
+  no volume, and the app leaves it alone. One with a mounted volume cannot be
+  freed for a guest by unmounting it: the app takes the unmount for an eject
+  and detaches the disk (item 22 is the same handler).
+- *Writes must be whole 512-byte blocks at block offsets* on the raw node
+  (EINVAL otherwise), from any buffer. The block node takes anything and
+  goes through the buffer cache.
+- *A guest's flush goes nowhere.* `fsync` and both synchronize ioctls return
+  success in under 4 ms and the extension's flush count does not move;
+  `F_FULLFSYNC` is ENOTTY. This is the missing barrier signal of
+  `backend-a-fskit-notes.md` again, so on the raw device, as under APFS, the
+  target's flush policy is the whole of durability: write-through by default,
+  and with a relaxed policy a guest that flushed has been told a lie.
+- The device advertises unmap, and neither FUA nor barriers.
+
+Still owed: a real guest. VM 27 has no hypervisor (`kern.hv_support` is 0 in
+a macOS guest), so it would be QEMU emulating the processor there, whose disk
+path is the same as an accelerated one's.
+
 **Flushing the volume ourselves, at normal priority, helps and does not
 cure** (`sync_volume_np` on the volume every 3 s from an unprivileged
 process, severe state, alternated): longest stall 3.4, 11.0 and 3.3 s with
