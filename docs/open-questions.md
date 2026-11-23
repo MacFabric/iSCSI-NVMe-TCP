@@ -1490,25 +1490,51 @@ on the VM, file-backed, slowed with `fault responsedelayms`), three writers of
   in-place writer pays differently: 1.6 MiB/s against the appenders'
   9 MiB/s, because their bursts fill the one-at-a-time queue.
 
+**The kernel's background-I/O throttle is what makes it long** (evening,
+after a reboot of the VM, which brought the severe stalls back). launchd's
+sync thread runs at a background priority, and background I/O is throttled
+behind foreground I/O: `debug.lowpri_throttle_max_iosize` is 128 KiB, with a
+200 ms pause between pieces on a disk that is not solid-state (25 ms on one
+that is) while foreground I/O has happened in the last half second. Three
+writers, slowed simulator, alternated:
+
+| `debug.lowpri_throttle_enabled` | longest stalled `write()` | launchd's syncs |
+|---|---|---|
+| 1 (default) | 28.3, 2.5 and 42.9 s | up to 31 and 46 s |
+| 0 | 3.1, 2.0 and 2.2 s | 15 s at most |
+
+Both attach engines present the disk with "Solid State: Info not
+available", so it gets the spinning-disk pause.
+
+**Without APFS there is no stall.** Three writers straight onto the scratch
+disk's raw device, same disk speed, 9 to 11 minutes after boot: every write
+between 178 and 217 ms, 16.5 MiB/s against about 13 through APFS, and
+launchd's syncs back to 0.1 to 0.3 s. The disk under the filesystem is even
+and steady; the whole effect is in the layer above it. A filesystem cannot
+be mounted from `/dev/rdiskN`, but a virtual machine can be handed one as
+its disk, which takes APFS, its buffering and this lock out of the path.
+
+**Flushing the volume ourselves, at normal priority, helps and does not
+cure** (`sync_volume_np` on the volume every 3 s from an unprivileged
+process, severe state, alternated): longest stall 3.4, 11.0 and 3.3 s with
+it, against 12.9 and 28.7 s without, and 22 s twice just before. Each flush
+took about 10 s on this disk and holds each file for about 3 s as it passes,
+so it trades one long stall for a steady supply of short ones.
+
 **What is still not established.**
 
-- *Whether the sync's priority matters.* launchd's cannot be turned off, so
-  a `sync` of mine at either priority mostly waits behind it, and every
-  stall of ten seconds or more in those trials began at :24 or :54, which
-  is launchd's. With no stall to attribute to mine, the only number is how
-  long mine took against a measured writer and two competitors: 12 to 27 s
-  at default priority, 49 and 68 s at background. Consistent with
-  background I/O being throttled; too few to lean on.
-- *Whether DiskImages2 avoids it.* Alternated on the slowed simulator, with
-  512-byte blocks so `diskutil image attach` can be used: `hdiutil` stalled
-  11 to 34 s in two runs of three (syncs of 20 to 56 s); DiskImages2 3 to
-  5 s in four runs (syncs of 1 to 15 s); `hdiutil` again 3 to 5 s in three
-  runs (syncs of 4 to 19 s). The third leg undoes the first two. The same
-  thing happened on the NAS: long stalls on `hdiutil`, none on DiskImages2,
-  then none on `hdiutil` either. Either something in a DiskImages2 session
-  outlasts it, or the stall drifts for a reason not yet found; this does
-  not say which.
-- *Why it varies at one disk speed.* At 5 ms it ranged from nothing to 45 s.
+- *What switches the stall between severe and mild.* At one disk speed it
+  is either 20 to 45 s or about 3 s, for long stretches, and the throttle
+  settings make no difference at all while it is mild. A reboot brought the
+  severe state back for about a quarter of an hour. Ruled out as the
+  switch: a DiskImages2 session carrying over (a disk never attached that
+  way was mild), uptime alone (severe two hours into one boot), and
+  foreground writes to the internal disk (ten fsyncs a second there changed
+  nothing).
+- *Whether DiskImages2 avoids it.* Four DiskImages2 runs 18 to 22 minutes
+  after the reboot stalled 4.3 s at most; but four `hdiutil` runs at 27 to
+  31 minutes were mild too, so the window may simply have closed. Three
+  attempts at this comparison, none conclusive.
 
 **It is not the NAS filling a log device.** That was a reasonable guess for
 a stall that looks related to bytes written, and it may yet explain the
@@ -1516,33 +1542,42 @@ six-minute crawl recorded in `performance.md`, where the daemon itself saw
 1 to 2 s per megabyte. Here the device is answering promptly throughout,
 and the simulator, which has no log device, reproduces it.
 
-**What it means for this project.** The stall belongs to macOS: a periodic
-sync, a per-file lock, and a backlog of buffered writes that takes long to
-flush to a slow disk. Nothing in the extension or the daemon is waiting. A
-VM's disk image was not the victim in the one configuration tried, which is
-the case that matters most and deserves more than two runs. What this
-project controls is how slow the disk is: write-through to a target that
-commits every write is what puts an attached volume in the range where the
-stall appears.
+**What this project can and cannot do about it.**
+
+- *Cannot:* set a throttle policy for a drive. The pause is chosen by the
+  kernel from what the disk's driver reports, and the driver is Apple's
+  disk-image driver on both engines; neither `hdiutil attach` nor `diskutil
+  image attach` has an option for it. The only switches are the `debug.`
+  sysctls, which are root-only and change background I/O for every disk on
+  the machine. launchd's sync cannot be turned off or made to skip a
+  volume.
+- *Can:* keep the disk fast, since the stall is the backlog divided by what
+  the throttled sync is allowed; document that a virtual machine is better
+  given the raw device than an image file on an attached volume, once that
+  has been tried with a real hypervisor; and, if it earns its place, run the
+  periodic flush above from the app for volumes it attached.
 
 **How to attack it next.**
 
-1. More runs of the disk-image-style writer, alone and with a guest's mix
-   of sizes, including the flushes a guest issues.
-2. `hdiutil` after a DiskImages2 session against `hdiutil` after a reboot,
-   to find out whether the third leg above is carry-over or drift.
-3. The same slowed simulator with the target's flush policy relaxed, to
-   see how much of the stall the write-through setting is buying.
+1. A real guest on the raw device and on an image file, in the severe state
+   (straight after a reboot is the one reliable way in).
+2. Find the switch: a spindump of launchd's sync in each state, to see
+   whether it is sleeping in the throttle or not.
+3. DiskImages2 against `hdiutil` in the first ten minutes after a reboot,
+   one reboot each.
 
 Tools: `scripts/write-stall.py` (three writers, every call timed, what the
 others did meanwhile, a capture command when a write is stuck),
 `scripts/write-stall-mixed.py` (the same around the unchanged
-`mixed-load.py`) and `scripts/write-stall-single.py` (one measured writer,
-appending or in place, aligned or not, against competitors). `sudo spindump
--notarget 3 10 -file …` is the capture that found it, since `sample` cannot
-see the kernel frames that matter, and `sudo fs_usage -w -f filesys launchd`
-times the syncs. A detail that cost an hour: a sync holds the newest file
-longest, so a script that times only its first writer sees nothing.
+`mixed-load.py`), `scripts/write-stall-single.py` (one measured writer,
+appending or in place, aligned or not, against competitors),
+`scripts/write-stall-flusher.py` (the periodic volume flush) and
+`scripts/write-stall-raw.py` (writers on a raw device; destroys it). `sudo
+spindump -notarget 3 10 -file …` is the capture that found it, since
+`sample` cannot see the kernel frames that matter, and `sudo fs_usage -w -f
+filesys launchd` times the syncs. A sync holds the newest file longest, so
+a script that times only its first writer sees nothing. And in zsh, a
+variable called `path` is `PATH`.
 
 ## A note on method
 
