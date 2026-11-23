@@ -72,7 +72,7 @@ settings:
     SWIFT_VERSION: "6.0"
     SWIFT_EMIT_LOC_STRINGS: YES
     MARKETING_VERSION: "0.10.0"
-    CURRENT_PROJECT_VERSION: "57"
+    CURRENT_PROJECT_VERSION: "58"
 
 targets:
   # ---- Container app ----
