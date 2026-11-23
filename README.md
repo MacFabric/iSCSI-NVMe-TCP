@@ -87,7 +87,7 @@ I also manually test the initiator on a completely different bare-metal macOS (i
 It works. It's not just VMs. I daily-drive the project, too, over Tailscale and directly. As far as I can tell, it works.
 It definitely suits my needs.
 
-## Performance/testing
+## Performance
 
 Performance is a somewhat complicated story. The best-case scenario for performance is large linear
 reads and, to a lesser extent, writes. The initiator performs look-ahead retrieval if it detects
@@ -106,8 +106,23 @@ because the actual on-disk bytes will be inconsistent.
 TL;DR don't disable FUA on every write unless you know what you're doing. **Especially don't disable it
 over WiFi, or a VPN, or Tailscale, etc.** Caveat emptor.
 
-Most of the work and testing is done against a LUN on my actual, geriatric TrueNAS 25.04 server in my
-homelab. There is also a target simulator that can be, and was, used for destructive testing.
+### Virtual machines
+
+One of the big use cases for me is hosting VMs. APFS over the network is a terrible, terrible choice for 
+that. APFS can buffer writes and then try to sync them in a low-priority thread every 30 seconds, resulting
+sometimes in gigabytes of writes at once, with the VM's drive locked until they complete. This is enough to 
+crash some guests.
+
+Some virtualization frameworks can use raw devices instead of files in a filesystem; QEMU can, and Apple's
+Virtualization framework can as well. The initiator offers an 'attach as a raw device' toggle for this
+use case. **If you run VMs on iSCSI/NVMe targets, seriously consider formatting them as HFS+ which avoids
+this issue**. Actually using raw devices through virtualization software is left as an exercise for the reader.
+
+## Testing
+
+Most of the work and testing is done against a LUN on my actual, geriatric TrueNAS 27 server in my
+homelab. There is also a target simulator that can be, and was, used for destructive testing. 10 gbps is the
+fastest network I have access to.
 
 Test it yourself:
 
