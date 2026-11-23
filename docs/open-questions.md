@@ -1781,6 +1781,12 @@ disk the app attached itself, as opposed to one attached by `iscsictl`.
 Utility and with `diskutil eraseDisk`, app running. Expect the erase to
 finish and the disk to stay attached.
 
+A disk attached as a raw device is exempt (build 57.5, 2026-11-23): the
+handler ignores it. `diskutil eraseDisk JHFS+` on one, app running,
+finished and mounted the new volume; unmounting that left the disk and its
+FSKit mount up, with nothing logged; and a Detach and Attach in the app
+brought it back as a raw device with the HFS+ volume unmounted.
+
 ## A note on method
 
 Four things were got wrong during this work and three had the same cause:
