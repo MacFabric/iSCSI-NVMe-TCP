@@ -1556,10 +1556,47 @@ was never held, while the writers beside it on the APFS volume still were
 guest with a disk timeout under 27 s would have, and the FreeBSD guest in
 the DiskImages2 case above panicked on one of 10 s.
 
-Not tried: Apple's Virtualization framework (UTM's "Apple" machines), whose
-caching mode for an image file may not be QEMU's default; QEMU with
-`cache=none`; and a real accelerated guest, which needs a Mac that is not
-itself a VM.
+**On a real Mac, on the NAS: the Virtualization framework's default mode is
+the worst case** (the development Mac, 27.2.1, up a day, so in the milder
+state; `ssd-vms` on the NAS, an image file on its APFS volume; the same
+Alpine guest, under the framework through `scripts/vz-guest.swift` and
+under QEMU with Hypervisor.framework; build 57.4, also seen on 0.9.2).
+
+How the image file is opened decides the speed. 128 MiB alone:
+
+| guest, image-file mode | DiskImages2 | `hdiutil` |
+|---|---|---|
+| QEMU, default (host page cache) | 7.7 MiB/s, longest 3.0 s | 6.6 MiB/s, longest 3.6 s |
+| framework, `automatic` (its default) | **1.5 MiB/s**, 13 writes of 3 s or more | **1.2 MiB/s**, 14 |
+| framework, `uncached` | 1.5 MiB/s, 11 | 1.3 MiB/s, 12 |
+| framework, `cached` | 10.0 MiB/s, longest 1.3 s | 9.2 MiB/s, longest 1.1 s |
+
+The guest's queue is the same under both (4 MiB requests, a write-back
+cache advertised), so the difference is on the Mac's side: `automatic`
+behaves as `uncached`, every write reaches the volume unmerged, and each
+waits for the target to commit it under the default write-through policy.
+That reading is mine and not yet traced; the extension and daemon logged
+nothing slow while it happened.
+
+Beside two buffered writers on the same volume, 512 MiB per guest run (two
+runs each), and 128 MiB for the framework's default:
+
+| guest | DiskImages2: longest write | `hdiutil`: longest write |
+|---|---|---|
+| framework, `cached` | 16.0, 7.0 s | 8.8, 6.3 s |
+| QEMU, default | 7.6, 8.2 s | 5.9, 9.0 s |
+| framework, `automatic` | **64.2 s** | **76.6 s** |
+
+The framework's default write was the guest's first, and it was held for
+as long as the other writers ran (66.5 and 79.6 s): starved, not caught by
+a sync. A guest with any disk timeout under a minute would have failed it.
+The control writers here never stalled past 8.2 s, so this Mac was in the
+mild state; on VM 27 the guests on an image file reached 27 s in the severe
+one. Within this Mac, the engines made no difference worth reading.
+
+Not tried: the raw device under the framework against an initiator disk
+(it opens one, `VZDiskBlockDeviceStorageDeviceAttachment`), the severe
+state on a real Mac (it needs a reboot), and QEMU with `cache=none`.
 
 **Flushing the volume ourselves, at normal priority, helps and does not
 cure** (`sync_volume_np` on the volume every 3 s from an unprivileged
@@ -1636,8 +1673,10 @@ and the simulator, which has no log device, reproduces it.
 
 **How to attack it next.**
 
-1. The same guest test with the Virtualization framework, with QEMU's
-   `cache=none`, on ExFAT, and with QEMU under `taskpolicy -d passive`.
+1. On a real Mac: the framework on the raw device of a blank attached LUN,
+   just after a reboot; QEMU's `cache=none`; ExFAT; a hypervisor under
+   `taskpolicy -d passive`. And trace where the framework's uncached writes
+   spend their time.
 2. Find the switch: a spindump of launchd's sync in each state, to see
    whether it is sleeping in the throttle or not.
 3. DiskImages2 against `hdiutil` in the first ten minutes after a reboot,
@@ -1651,7 +1690,9 @@ appending or in place, aligned or not, against competitors),
 `scripts/write-stall-flusher.py` (the periodic volume flush) and
 `scripts/write-stall-raw.py` (writers on a raw device; destroys it),
 `scripts/raw-device-check.py` (what a hypervisor meets on the raw device)
-and `scripts/write-stall-guest.py` (a QEMU guest's writes). `sudo
+`scripts/write-stall-guest.py` (a guest's writes, under QEMU or the
+Virtualization framework) and `scripts/vz-guest.swift` (the framework
+runner it uses). `sudo
 spindump -notarget 3 10 -file …` is the capture that found it, since
 `sample` cannot see the kernel frames that matter, and `sudo fs_usage -w -f
 filesys launchd` times the syncs. A sync holds the newest file longest, so

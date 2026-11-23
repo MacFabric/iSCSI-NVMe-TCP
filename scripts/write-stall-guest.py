@@ -6,8 +6,10 @@
 Wants, beside it, `qemu/qemu-system-aarch64` with its dylibs in `qemu/lib`
 (Homebrew's, copied with what `otool -L` names outside /usr/lib and /System),
 and `alpine/vmlinuz-virt` and `alpine/initramfs-virt` from Alpine's aarch64
-netboot release. A macOS guest has no hypervisor, so this emulates the
-processor (TCG); the disk path is QEMU's ordinary one, default cache mode.
+netboot release, plus `alpine/Image` (the kernel unpacked from
+vmlinuz-virt's gzip payload) for the Virtualization framework. In a macOS
+VM there is no hypervisor, so QEMU emulates the processor (TCG); the disk
+path is QEMU's ordinary one, default cache mode.
 
 The guest is Alpine's netboot kernel with a shell as init: it writes <MiB> to
 /dev/vda in 4 MiB direct writes of random data, timing each from inside the
@@ -15,10 +17,21 @@ guest. DESTROYS what is on the disk. Prints throughput, the longest write and
 every write of a second or more, with when it started (seconds into the run)."""
 import os, subprocess, sys, threading, time
 label, disk, mib = sys.argv[1], sys.argv[2], int(sys.argv[3])
-extra = "," + sys.argv[4] if len(sys.argv) > 4 else ""
+extra = "," + sys.argv[4] if len(sys.argv) > 4 and sys.argv[4] else ""
 here = os.path.dirname(os.path.abspath(__file__))
+# GUEST_ENGINE: qemu-tcg (default; a Mac with no hypervisor, such as a VM),
+# qemu-hvf (QEMU with Hypervisor.framework), or vz (vz-guest beside this
+# script, Apple's Virtualization framework; <extra> is then its mode
+# arguments, space-separated: "image cached full", "block").
+# QEMU defaults to the copy beside this script, else set QEMU.
+engine = os.environ.get("GUEST_ENGINE", "qemu-tcg")
+qemu = os.environ.get("QEMU", here + "/qemu/qemu-system-aarch64")
 env = dict(os.environ, DYLD_LIBRARY_PATH=here + "/qemu/lib")
-cmd = [here + "/qemu/qemu-system-aarch64", "-machine", "virt", "-cpu", "cortex-a72", "-accel", "tcg,thread=multi",
+if engine == "vz":
+    cmd = [here + "/vz-guest", here + "/alpine/Image", here + "/alpine/initramfs-virt", disk] + extra[1:].split()
+else:
+    accel = ["-accel", "hvf", "-cpu", "host"] if engine == "qemu-hvf" else ["-accel", "tcg,thread=multi", "-cpu", "cortex-a72"]
+    cmd = [qemu, "-machine", "virt"] + accel + [
        "-smp", "2", "-m", "512", "-nodefaults", "-display", "none", "-monitor", "none", "-serial", "stdio",
        "-kernel", here + "/alpine/vmlinuz-virt", "-initrd", here + "/alpine/initramfs-virt",
        "-append", "console=ttyAMA0 rdinit=/bin/sh quiet",
