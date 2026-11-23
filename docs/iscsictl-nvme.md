@@ -72,3 +72,17 @@ or killed, like anything else that touches the volume.
 lines to stderr. Level 1 summarizes connection setup and each command with its
 outcome. Level 2 adds the fields of every PDU. `add`, `remove`, `attach` and `detach` have
 no trace, because the daemon does that work.
+
+### NVMeKit source dependency
+
+SwiftPM and Xcode both use the checked-in `Vendor/NVMeKit` package, which
+contains the logging API. A clean checkout needs no sibling repository or
+`swift package edit` override. Source provenance and update instructions are
+in `Vendor/NVMeKit/VENDOR.md`.
+
+Run both suites when changing the logging path:
+
+```sh
+swift test --no-parallel
+swift test --package-path Vendor/NVMeKit --no-parallel
+```

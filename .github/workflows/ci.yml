@@ -39,7 +39,8 @@ jobs:
 
       # The daemon core, the volume data path, and everything that crosses
       # XPC; the protocol engines are tested in their own repositories
-      # (FabricKit, iSCSIKit, NVMeKit). No signing, no Xcode project, no
+      # (FabricKit, iSCSIKit); the vendored NVMeKit suite runs below.
+      # No signing, no Xcode project, no
       # FSKit — this half of the codebase is deliberately free of platform
       # I/O so it can be tested anywhere.
       - name: swift build
@@ -64,6 +65,9 @@ jobs:
         run: |
           set -o pipefail
           swift test --no-parallel --enable-code-coverage 2>&1 | tee "$RUNNER_TEMP/swift-test.log"
+
+      - name: Vendored NVMeKit tests
+        run: swift test --package-path Vendor/NVMeKit --no-parallel
 
       # Computed on every run, including pull requests, and printed. Only the
       # push below is main-only. Coverage that is calculated only where it is

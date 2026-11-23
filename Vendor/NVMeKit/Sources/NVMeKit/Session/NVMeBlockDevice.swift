@@ -1,0 +1,198 @@
+import Foundation
+
+/// A linear, byte-addressable block device backed by one NVMe namespace —
+/// the `ISCSIBlockDevice` twin, with the same chunking, the same in-flight
+/// bound, and FUA on every write when `writeThrough` is set.
+public actor NVMeBlockDevice: BlockDeviceBackend {
+    private let controller: NVMeController
+    private let debugLog: (@Sendable (String) -> Void)?
+    public let nsid: UInt32
+    private var cachedBlockSize: Int = 0
+    private var cachedBlockCount: UInt64 = 0
+    private var capacityKnown = false
+
+    /// Cap per-command transfer, further clamped to MDTS. 256 KiB for the
+    /// same reasons as iSCSI (docs/queue-depth.md), and never above what one
+    /// inbound PDU can carry: nvmet answers a read with a single C2HData for
+    /// the whole transfer, so a larger cap would make every large read a
+    /// protocol error. NLB is 16-bit, which this never approaches at any
+    /// block size in use.
+    private let requestedMaxTransferBytes: Int
+
+    /// When true, every Write carries Force Unit Access. Backend A gets no
+    /// barrier signal from FSKit, so with a volatile controller cache an
+    /// acknowledged-but-cached write breaks APFS's ordering guarantees.
+    private let writeThrough: Bool
+
+    public init(controller: NVMeController, nsid: UInt32, maxTransferBytes: Int = 256 << 10,
+                writeThrough: Bool = false) {
+        self.controller = controller
+        self.debugLog = controller.debugLog
+        self.nsid = nsid
+        self.requestedMaxTransferBytes = min(maxTransferBytes, NVMeController.maxIOTransferBytes)
+        self.writeThrough = writeThrough
+    }
+
+    /// VWC from Identify Controller: never nil once the controller is up.
+    public func writeCacheEnabled() async throws -> Bool? {
+        await controller.volatileWriteCachePresent
+    }
+
+    /// Identify Namespace, cached after the first call.
+    public func readCapacity() async throws -> (blockSize: Int, blockCount: UInt64) {
+        debugLog?("NVMeBlockDevice.\(#function) nsid=\(nsid) cached=\(capacityKnown)")
+        if capacityKnown { return (cachedBlockSize, cachedBlockCount) }
+        let (blockSize, blockCount) = try await controller.identifyNamespace(nsid)
+        cachedBlockSize = blockSize
+        cachedBlockCount = blockCount
+        capacityKnown = true
+        return (blockSize, blockCount)
+    }
+
+    public var blockSize: Int {
+        get async { capacityKnown ? cachedBlockSize : ((try? await readCapacity().blockSize) ?? 0) }
+    }
+
+    public var blockCount: UInt64 {
+        get async { capacityKnown ? cachedBlockCount : ((try? await readCapacity().blockCount) ?? 0) }
+    }
+
+    private func maxTransferBytes() async -> Int {
+        let mdts = await controller.maxTransferBytes
+        let limit = min(requestedMaxTransferBytes, mdts ?? Int.max)
+        debugLog?("NVMeBlockDevice.\(#function) requested=\(requestedMaxTransferBytes) "
+                             + "mdts=\(mdts.map { String($0) } ?? "unlimited") limit=\(limit)")
+        return limit
+    }
+
+    public func read(offset: UInt64, length: Int) async throws -> Data {
+        debugLog?("NVMeBlockDevice.\(#function) nsid=\(nsid) offset=\(offset) length=\(length)")
+        let (bs, count) = try await readCapacity()
+        try validate(offset: offset, length: length, blockSize: bs, capacity: count)
+        // A Read's block count is 0-based (`NVMeCommands.read` traps on 0),
+        // so there is no zero-block command to send.
+        if length == 0 { return Data() }
+        let blocksPerChunk = max(1, await maxTransferBytes() / bs)
+        let firstLBA = offset / UInt64(bs)
+        let totalBlocks = length / bs
+        debugLog?("NVMeBlockDevice.\(#function)"
+                             + " blockSize=\(bs) firstLBA=\(firstLBA) totalBlocks=\(totalBlocks) blocksPerChunk=\(blocksPerChunk)")
+
+        if totalBlocks <= blocksPerChunk {
+            let data = try await readChunk(lba: firstLBA, blocks: totalBlocks, blockSize: bs)
+            debugLog?("NVMeBlockDevice.\(#function) finished nsid=\(nsid)"
+                                 + " offset=\(offset) receivedBytes=\(data.count)")
+            return data
+        }
+
+        var plan: [(index: Int, lba: UInt64, blocks: Int)] = []
+        var lba = firstLBA
+        var remaining = totalBlocks
+        while remaining > 0 {
+            let blocks = min(remaining, blocksPerChunk)
+            plan.append((plan.count, lba, blocks))
+            lba += UInt64(blocks)
+            remaining -= blocks
+        }
+
+        let parts = try await withThrowingTaskGroup(
+            of: (Int, Data).self, returning: [Int: Data].self
+        ) { group in
+            for chunk in plan {
+                group.addTask { [self] in
+                    (chunk.index, try await readChunk(lba: chunk.lba, blocks: chunk.blocks, blockSize: bs))
+                }
+            }
+            var collected: [Int: Data] = [:]
+            for try await (index, data) in group { collected[index] = data }
+            return collected
+        }
+
+        var out = Data(capacity: length)
+        for chunk in plan {
+            guard let part = parts[chunk.index] else { throw BlockDeviceError.notReady }
+            out.append(part)
+        }
+        debugLog?("NVMeBlockDevice.\(#function) finished nsid=\(nsid)"
+                             + " offset=\(offset) receivedBytes=\(out.count)")
+        return out
+    }
+
+    private func readChunk(lba: UInt64, blocks: Int, blockSize bs: Int) async throws -> Data {
+        let expectedRead = blocks * bs
+        let sqe = NVMeCommands.read(commandID: 0, nsid: nsid, slba: lba, blocks: UInt32(blocks), blockSize: bs)
+        guard let debugLog else {
+            return try await controller.execute(sqe, expectedRead: expectedRead).data
+        }
+        debugLog("NVMeBlockDevice.\(#function) nsid=\(nsid) lba=\(lba) blocks=\(blocks)"
+                 + " blockSize=\(bs) expectedRead=\(expectedRead)")
+        let completion = try await controller.execute(sqe, expectedRead: expectedRead)
+        debugLog("NVMeBlockDevice.\(#function) finished nsid=\(nsid) lba=\(lba)"
+                 + " connection=\(completion.connectionID?.uuidString ?? "-")"
+                 + " cid=\(completion.cqe.commandID) receivedBytes=\(completion.data.count)")
+        return completion.data
+    }
+
+    /// Chunks of one write pipeline concurrently, bounded: they are disjoint
+    /// by construction, and disjoint FUA writes are each still durable when
+    /// acknowledged, so write-through loses nothing.
+    public func write(offset: UInt64, data: Data) async throws {
+        let (bs, count) = try await readCapacity()
+        try validate(offset: offset, length: data.count, blockSize: bs, capacity: count)
+        let blocksPerChunk = max(1, await maxTransferBytes() / bs)
+
+        var plan: [(lba: UInt64, bytes: Range<Data.Index>)] = []
+        var lba = offset / UInt64(bs)
+        var cursor = data.startIndex
+        var remaining = data.count / bs
+        while remaining > 0 {
+            let blocks = min(remaining, blocksPerChunk)
+            let byteLen = blocks * bs
+            plan.append((lba, cursor ..< cursor + byteLen))
+            lba += UInt64(blocks)
+            cursor += byteLen
+            remaining -= blocks
+        }
+
+        if plan.count == 1 {
+            try await writeChunk(lba: plan[0].lba, payload: Data(data[plan[0].bytes]), blockSize: bs)
+            return
+        }
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            var next = 0
+            func addNext() {
+                let chunk = plan[next]
+                next += 1
+                group.addTask { [self] in
+                    try await writeChunk(lba: chunk.lba, payload: Data(data[chunk.bytes]), blockSize: bs)
+                }
+            }
+            while next < min(Self.maxChunksInFlight, plan.count) { addNext() }
+            while try await group.next() != nil {
+                if next < plan.count { addNext() }
+            }
+        }
+    }
+
+    /// Commands one request may have outstanding; the same bound as iSCSI.
+    public static let maxChunksInFlight = 8
+
+    private func writeChunk(lba: UInt64, payload: Data, blockSize bs: Int) async throws {
+        _ = try await controller.execute(
+            NVMeCommands.write(commandID: 0, nsid: nsid, slba: lba, blocks: UInt32(payload.count / bs),
+                               blockSize: bs, fua: writeThrough, inCapsule: false),
+            data: payload)
+    }
+
+    public func flush() async throws {
+        _ = try await controller.execute(NVMeCommands.flush(commandID: 0, nsid: nsid))
+    }
+
+    private func validate(offset: UInt64, length: Int, blockSize: Int, capacity: UInt64) throws {
+        debugLog?("NVMeBlockDevice.\(#function) offset=\(offset) length=\(length) "
+                             + "blockSize=\(blockSize) blockCount=\(capacity)")
+        try BlockRequest.validate(offset: offset, length: length,
+                                  blockSize: blockSize, capacity: capacity)
+    }
+}

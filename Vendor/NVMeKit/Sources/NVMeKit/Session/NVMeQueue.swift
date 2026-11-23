@@ -1,0 +1,571 @@
+import Foundation
+
+/// A command's completion: the CQE and, for reads, the bytes the C2HData
+/// PDUs delivered.
+public struct NVMeCompletion: Sendable {
+    public let cqe: CQE
+    public let data: Data
+    let receivedBytes: Int
+    let connectionID: UUID?
+}
+
+/// One NVMe/TCP connection, which is one queue pair: ICReq/ICResp, then a
+/// Fabrics Connect, then command capsules with their data transfers. Free
+/// of retry and recovery policy — that lives in `NVMeController`, exactly
+/// as `ISCSIConnection` leaves it to `ISCSISession`.
+public actor NVMeQueue {
+    private enum State: Equatable {
+        case idle
+        case connected
+        case closed
+    }
+
+    /// Completion holder: the responder side may complete before the
+    /// requester suspends, so results are buffered. @unchecked Sendable is
+    /// sound because every access happens on this actor.
+    private final class Awaitable<Value: Sendable>: @unchecked Sendable {
+        var buffered: Result<Value, any Error>?
+        var continuation: CheckedContinuation<Value, any Error>?
+
+        func complete(_ result: Result<Value, any Error>) {
+            if let c = continuation {
+                continuation = nil
+                c.resume(with: result)
+            } else if buffered == nil {
+                buffered = result
+            }
+        }
+    }
+
+    private final class PendingCommand {
+        let opcode: UInt8
+        /// Write data, kept so R2Ts can be answered from it.
+        let writeData: Data
+        /// Bytes every R2T so far has asked for; the next one must start
+        /// exactly here (NVMe/TCP 1.1 §3.3.2.2).
+        var solicitedBytes = 0
+        var readBuffer: Data
+        /// C2HData bytes accepted so far; a successful completion must
+        /// account for every byte or the read has silent zero-filled holes.
+        /// Every PDU must start exactly here (NVMe/TCP 1.1 §3.3.2.1), so a
+        /// repeated or skipped range cannot make the count come out right.
+        var receivedBytes = 0
+        /// LAST_PDU seen: any further C2HData for this command is a
+        /// sequence error.
+        var dataComplete = false
+        /// A C2HData PDU failed its data digest. The transfer continues and
+        /// the command fails at completion (NVMe/TCP 1.1 §3.5).
+        var dataDigestFailed = false
+        /// Cancelled locally; the entry stays so the controller's completion
+        /// for this CID is absorbed rather than mistaken for a stray.
+        var terminated = false
+        let completion = Awaitable<NVMeCompletion>()
+
+        init(opcode: UInt8, writeData: Data, expectedRead: Int) {
+            self.opcode = opcode
+            self.writeData = writeData
+            self.readBuffer = Data(count: expectedRead)
+        }
+    }
+
+    /// A fatal transport error detected here (NVMe/TCP 1.1 §3.5): what the
+    /// H2CTermReq says, and what the connection then closes with.
+    private struct FatalTransportError: Error {
+        let fes: NVMeTCPFatalErrorStatus
+        /// Byte offset of the offending field, for the FES values that
+        /// carry one; 0 otherwise.
+        let fei: UInt32
+        let reason: String
+    }
+
+    private func fatal(_ fes: NVMeTCPFatalErrorStatus, fei: UInt32 = 0, _ reason: String) -> FatalTransportError {
+        FatalTransportError(fes: fes, fei: fei, reason: reason)
+    }
+
+    /// Offsets, from the start of a PDU, of the fields a FEI can name.
+    private enum FieldOffset {
+        static let type: UInt32 = 0
+        static let flags: UInt32 = 1
+        static let cccid: UInt32 = 8
+        static let cqeCID: UInt32 = 8 + 12
+    }
+
+    private let transport: any ConnectionTransport
+    private let connectionID: UUID?
+    private let debugLog: (@Sendable (String) -> Void)?
+    public let queueID: UInt16
+    /// SQ entries as sent in Connect. The controller is told SQSIZE−1 and
+    /// may have at most that many commands outstanding, so that is the
+    /// in-flight bound here too.
+    public let entries: UInt16
+    private let requestDigests: Bool
+    private let maxPDUBytes: Int
+
+    private var serializer = NVMeTCPSerializer()
+    private var deframer: NVMeTCPDeframer
+    public private(set) var digests = NVMeTCPDigests()
+    /// From ICResp: the largest H2CData PDU the controller accepts.
+    public private(set) var maxH2CData: UInt32 = 0
+    /// Bytes of write data allowed in a command capsule. 8 KiB on the admin
+    /// queue (the Linux host's `NVME_TCP_ADMIN_CCSZ`); the controller sets
+    /// it from IOCCSZ on the I/O queue once Identify Controller is in.
+    public private(set) var inCapsuleLimit: Int
+
+    private var state: State = .idle
+    private var closeReason: NVMeConnectionError?
+    private var pending: [UInt16: PendingCommand] = [:]
+    private var nextCID: UInt16 = 1
+    private var slotWaiters: [Awaitable<Void>] = []
+    private var closeWaiters: [CheckedContinuation<NVMeConnectionError, Never>] = []
+    private var readLoop: Task<Void, Never>?
+
+    public init(transport: any ConnectionTransport, queueID: UInt16, entries: UInt16,
+                requestDigests: Bool, maxPDUBytes: Int, inCapsuleLimit: Int = 8192,
+                debugLog: (@Sendable (String) -> Void)? = nil) {
+        precondition(entries >= 2, "a queue needs room for at least one command")
+        self.transport = transport
+        if let debugLog {
+            let connectionID = (transport as? NVMeTracingTransport)?.connectionID ?? UUID()
+            self.connectionID = connectionID
+            let prefix = "connection=\(connectionID.uuidString) "
+            self.debugLog = { message in debugLog(prefix + message) }
+        } else {
+            self.connectionID = nil
+            self.debugLog = nil
+        }
+        self.queueID = queueID
+        self.entries = entries
+        self.requestDigests = requestDigests
+        self.maxPDUBytes = maxPDUBytes
+        self.inCapsuleLimit = inCapsuleLimit
+        self.deframer = NVMeTCPDeframer(maxPDUBytes: maxPDUBytes)
+    }
+
+    public func setInCapsuleLimit(_ bytes: Int) {
+        inCapsuleLimit = max(0, bytes)
+    }
+
+    // MARK: - Connection initialization
+
+    /// ICReq/ICResp, then the Fabrics Connect for this queue. Returns the
+    /// controller ID the Connect answered with and whether the controller
+    /// demands in-band authentication (AUTHREQ), which this initiator does
+    /// not implement.
+    public func connect(host: NVMeHostIdentity, subsystemNQN: String, controllerID: UInt16,
+                        keepAliveMS: UInt32) async throws -> (controllerID: UInt16, authRequired: Bool) {
+        guard state == .idle else { throw NVMeConnectionError.protocolError("connect on a used queue") }
+
+        var icreq = ICReqPDU()
+        icreq.digests = requestDigests ? NVMeTCPDigests(header: true, data: true) : NVMeTCPDigests()
+        icreq.maxR2T = 0
+        try await sendRaw(serializer.serialize(icreq.encode()))
+        let icresp = try await receiveICResp()
+        guard icresp.pfv == 0 else {
+            throw await fail(.protocolError("controller wants PDU format version \(icresp.pfv), only 0 is supported"))
+        }
+        // We asked for HPDA 0 (dword alignment, which every fixed header
+        // length already satisfies, so the controller never pads). A CPDA
+        // above 0 would have us pad our own data PDUs; that is conformant
+        // but unsupported here, and the Linux host refuses it too.
+        guard icresp.cpda == 0 else {
+            throw await fail(.protocolError("controller requires CPDA \(icresp.cpda); only unaligned data is supported"))
+        }
+        if !requestDigests, icresp.digests != NVMeTCPDigests() {
+            throw await fail(.protocolError("controller enabled digests that were not offered"))
+        }
+        // The NVMe/TCP spec makes MAXH2CDATA a multiple of four bytes; the
+        // Linux host rejects it otherwise, so we do too.
+        guard icresp.maxH2CData >= 4096, icresp.maxH2CData % 4 == 0 else {
+            throw await fail(.protocolError("MAXH2CDATA \(icresp.maxH2CData) is below the 4096-byte minimum or not a multiple of four"))
+        }
+        digests = icresp.digests
+        maxH2CData = icresp.maxH2CData
+        // Digests apply from the first PDU after the IC exchange.
+        serializer = NVMeTCPSerializer(digests: digests)
+        // Reconfigured, not replaced: anything the controller sent in the
+        // same segment as the ICResp (a C2HTermReq, say) is already buffered.
+        deframer.digests = digests
+        deframer.maxPDUBytes = maxPDUBytes
+        state = .connected
+        startReadLoop()
+
+        let (sqe, data) = NVMeCommands.connect(
+            commandID: 0, queueID: queueID, queueEntries: entries, keepAliveMS: keepAliveMS,
+            hostID: host.hostID, controllerID: controllerID,
+            subsystemNQN: subsystemNQN, hostNQN: host.nqn)
+        let completion = try await submit(sqe, data: data, expectedRead: 0, forceInCapsule: true)
+        let status = completion.cqe.status
+        guard status.isSuccess else {
+            throw BlockDeviceError.nvmeStatus(sct: status.sct, sc: status.sc, opcode: NVMeOpcode.Admin.fabrics)
+        }
+        return (UInt16(completion.cqe.dw0 & 0xFFFF), completion.cqe.dw0 >> 16 != 0)
+    }
+
+    /// Synchronous-style PDU pull used only before the read loop starts.
+    private func receiveICResp() async throws -> ICRespPDU {
+        while true {
+            do {
+                if let raw = try deframer.next() {
+                    guard case .icResp(let resp) = try AnyNVMeTCPPDU.decode(raw) else {
+                        throw NVMeConnectionError.protocolError("expected ICResp, got PDU type \(raw.type)")
+                    }
+                    return resp
+                }
+            } catch let error as NVMeTCPError {
+                throw await fail(.protocolError("\(error)"))
+            }
+            guard let chunk = try await transport.receive() else {
+                throw await fail(.connectionLost("EOF before ICResp"))
+            }
+            deframer.append(chunk)
+        }
+    }
+
+    // MARK: - Commands
+
+    /// Submit a command capsule and await its completion. `data` is write
+    /// data — in the capsule when it fits `inCapsuleLimit`, otherwise sent
+    /// as H2CData when the controller's R2T asks; `expectedRead` bytes are
+    /// collected from C2HData PDUs. The queue assigns the CID and the SGL.
+    public func submit(_ sqe: SQE, data: Data = Data(), expectedRead: Int = 0) async throws -> NVMeCompletion {
+        debugLog?("NVMeQueue.\(#function) queueID=\(queueID) \(sqe.logCommandFields)"
+                  + " dataBytes=\(data.count) expectedRead=\(expectedRead)")
+        return try await submit(sqe, data: data, expectedRead: expectedRead, forceInCapsule: false)
+    }
+
+    /// `submit`, requiring a successful status.
+    public func submitChecked(_ sqe: SQE, data: Data = Data(), expectedRead: Int = 0) async throws -> NVMeCompletion {
+        debugLog?("NVMeQueue.\(#function) queueID=\(queueID) \(sqe.logCommandFields)"
+                  + " dataBytes=\(data.count) expectedRead=\(expectedRead)")
+        let completion = try await submit(sqe, data: data, expectedRead: expectedRead)
+        let status = completion.cqe.status
+        debugLog?("NVMeQueue.\(#function) queueID=\(queueID) cid=\(completion.cqe.commandID)"
+                  + " sct=\(status.sct) sc=\(status.sc) receivedBytes=\(completion.receivedBytes)")
+        guard status.isSuccess else {
+            throw BlockDeviceError.nvmeStatus(sct: status.sct, sc: status.sc, opcode: sqe.opcode)
+        }
+        return completion
+    }
+
+    private func submit(_ sqe: SQE, data: Data, expectedRead: Int, forceInCapsule: Bool) async throws -> NVMeCompletion {
+        try ensureOpen()
+        try await waitForSlot()
+        // Cancelled while waiting for a slot (or before): give the slot back
+        // and stop, rather than reach `NetworkTransport.send`, whose
+        // cancellation tears the whole connection down.
+        do {
+            try Task.checkCancellation()
+        } catch {
+            releaseSlot()
+            throw error
+        }
+
+        let cid = allocateCID()
+        var sqe = sqe
+        sqe.commandID = cid
+        let inCapsule = !data.isEmpty && (forceInCapsule || data.count <= inCapsuleLimit)
+        if !data.isEmpty {
+            sqe.sgl = inCapsule ? .inCapsule(length: UInt32(data.count)) : .transport(length: UInt32(data.count))
+        } else if expectedRead > 0 {
+            sqe.sgl = .transport(length: UInt32(expectedRead))
+        }
+        let command = PendingCommand(opcode: sqe.opcode, writeData: data, expectedRead: expectedRead)
+        pending[cid] = command
+
+        if let debugLog {
+            let lba = queueID != 0 && sqe.opcode == NVMeOpcode.NVM.read
+                ? " lba=\(UInt64(sqe.cdw11) << 32 | UInt64(sqe.cdw10))" : ""
+            debugLog("NVMeQueue.\(#function) queueID=\(queueID) cid=\(cid) \(sqe.logCommandFields)\(lba)"
+                     + " dataBytes=\(data.count) expectedRead=\(expectedRead) forceInCapsule=\(forceInCapsule)")
+        }
+        let capsule = CapsuleCmdPDU(sqe: sqe.bytes, inCapsuleData: inCapsule ? data : Data())
+        try await sendRaw(serializer.serialize(capsule.encode()))
+
+        let completion = try await withTaskCancellationHandler {
+            try await suspend(command.completion)
+        } onCancel: {
+            Task { await self.tombstone(cid: cid) }
+        }
+        debugLog?("NVMeQueue.\(#function) resumed queueID=\(queueID) cid=\(cid)"
+                  + " receivedBytes=\(completion.receivedBytes)")
+        return completion
+    }
+
+    /// Await connection teardown (the controller's recovery trigger).
+    public func waitClosed() async -> NVMeConnectionError {
+        if state == .closed { return closeReason ?? .closed }
+        return await withCheckedContinuation { c in
+            closeWaiters.append(c)
+        }
+    }
+
+    public func close() async {
+        await close(reason: .closed)
+    }
+
+    // MARK: - Internals
+
+    private func suspend<V: Sendable>(_ box: Awaitable<V>) async throws -> V {
+        if let buffered = box.buffered {
+            box.buffered = nil
+            return try buffered.get()
+        }
+        return try await withCheckedThrowingContinuation { box.continuation = $0 }
+    }
+
+    private func ensureOpen() throws {
+        guard state == .connected else {
+            throw closeReason ?? NVMeConnectionError.closed
+        }
+    }
+
+    /// Close with `reason` and hand it back, so a failed step can `throw`
+    /// the very error the connection now carries.
+    private func fail(_ reason: NVMeConnectionError) async -> NVMeConnectionError {
+        await close(reason: reason)
+        return reason
+    }
+
+    private func allocateCID() -> UInt16 {
+        var cid = nextCID
+        while cid == 0xFFFF || pending[cid] != nil {
+            cid &+= 1
+            if cid == 0 { cid = 1 }
+        }
+        nextCID = cid &+ 1
+        if nextCID == 0 { nextCID = 1 }
+        return cid
+    }
+
+    /// Block until the queue can take another command: never more than
+    /// SQSIZE−1 outstanding, or the controller tears the connection down.
+    private func waitForSlot() async throws {
+        while state == .connected && pending.count >= Int(entries) - 1 {
+            let waiter = Awaitable<Void>()
+            slotWaiters.append(waiter)
+            try await withTaskCancellationHandler {
+                try await suspend(waiter)
+            } onCancel: {
+                Task { await self.cancelSlotWaiter(waiter) }
+            }
+        }
+        try ensureOpen()
+    }
+
+    private func cancelSlotWaiter(_ waiter: Awaitable<Void>) {
+        slotWaiters.removeAll { $0 === waiter }
+        waiter.complete(.failure(CancellationError()))
+    }
+
+    private func releaseSlot() {
+        guard !slotWaiters.isEmpty else { return }
+        let waiter = slotWaiters.removeFirst()
+        waiter.complete(.success(()))
+    }
+
+    private func tombstone(cid: UInt16) {
+        guard state == .connected, let command = pending[cid], !command.terminated else { return }
+        // Unblock the caller now; there is no cheap Abort on NVMe-oF, and the
+        // entry stays so the eventual completion is absorbed, not mistaken.
+        command.terminated = true
+        command.completion.complete(.failure(CancellationError()))
+    }
+
+    private func sendRaw(_ bytes: Data) async throws {
+        do {
+            try await transport.send(bytes)
+        } catch {
+            await close(reason: .connectionLost("send failed: \(error)"))
+            throw closeReason ?? NVMeConnectionError.closed
+        }
+    }
+
+    private func startReadLoop() {
+        readLoop = Task { [weak self] in
+            await self?.runReadLoop()
+        }
+    }
+
+    private func runReadLoop() async {
+        do {
+            while state == .connected {
+                // Drain first: the IC exchange may have left a PDU buffered.
+                while let raw = try deframer.next() {
+                    try await handle(raw)
+                }
+                guard state == .connected else { return }
+                guard let chunk = try await transport.receive() else {
+                    await close(reason: .connectionLost("EOF"))
+                    return
+                }
+                deframer.append(chunk)
+            }
+        } catch let error as FatalTransportError {
+            await terminate(fes: error.fes, fei: error.fei, reason: error.reason)
+        } catch let error as NVMeTCPError {
+            // The deframer or decoder refused the bytes: a header digest
+            // error is its own FES; everything else is an invalid header.
+            let fes: NVMeTCPFatalErrorStatus = error == .headerDigestMismatch ? .headerDigestError : .invalidPDUHeader
+            await terminate(fes: fes, fei: 0, reason: "\(error)")
+        } catch let error as NVMeConnectionError {
+            await close(reason: error)
+        } catch {
+            await close(reason: .connectionLost("\(error)"))
+        }
+    }
+
+    /// §3.5: on a fatal transport error the host stops processing PDUs,
+    /// sends an H2CTermReq carrying the offending header, and terminates.
+    /// Best effort with a short deadline: a peer that cannot take it gets
+    /// the reset the spec prescribes instead. The close that follows may
+    /// itself turn into a RST if the peer left inbound bytes unread, in
+    /// which case the request is lost with it; diagnostic only.
+    private func terminate(fes: NVMeTCPFatalErrorStatus, fei: UInt32, reason: String) async {
+        guard state == .connected else { return }
+        let pdu = H2CTermReqPDU(fes: fes, fei: fei, offendingHeader: deframer.lastHeader)
+        let bytes = serializer.serialize(pdu.encode())
+        _ = try? await withDeadline(.seconds(1)) { try await self.transport.send(bytes) }
+        await close(reason: .protocolError(reason))
+    }
+
+    private func handle(_ raw: RawNVMeTCPPDU) async throws {
+        debugLog?("NVMeQueue.\(#function) queueID=\(queueID) type=\(raw.type)")
+        switch try AnyNVMeTCPPDU.decode(raw) {
+        case .capsuleResp(let resp):
+            try complete(try CQE(bytes: resp.cqe))
+        case .c2hData(let pdu):
+            try handleC2HData(pdu, dataDigestFailed: raw.dataDigestFailed)
+        case .r2t(let r2t):
+            try await handleR2T(r2t)
+        case .c2hTermReq(let term):
+            // The controller already declared the error; answer with the
+            // termination it asked for, not a termination request of our own.
+            throw NVMeConnectionError.protocolError(
+                "controller terminated the connection: FES 0x\(String(term.fes.rawValue, radix: 16)) FEI \(term.fei)")
+        case .icResp:
+            throw fatal(.pduSequenceError, "ICResp after the connection was initialized")
+        case .icReq, .h2cTermReq, .capsuleCmd, .h2cData:
+            throw fatal(.invalidPDUHeader, fei: FieldOffset.type,
+                        "host-to-controller PDU type \(raw.type) received from the controller")
+        }
+    }
+
+    /// Generic Command Status 22h: the status a command whose data failed
+    /// its digest completes with (NVMe Base 2.0 Figure 94; NVMe/TCP 1.1
+    /// §3.5 calls it a non-fatal transport error). Retryable by definition.
+    public static let transientTransportError = NVMeStatus(sct: 0, sc: 0x22)
+
+    private func complete(_ cqe: CQE) throws {
+        guard let command = pending.removeValue(forKey: cqe.commandID) else {
+            throw fatal(.invalidPDUHeader, fei: FieldOffset.cqeCID, "completion for unknown CID \(cqe.commandID)")
+        }
+        releaseSlot()
+        if command.terminated { return }
+        var cqe = cqe
+        if cqe.status.isSuccess, command.dataDigestFailed {
+            // The controller's success is overruled: what arrived is not
+            // what it sent. The command fails; the connection is fine.
+            cqe.statusField = Self.transientTransportError.field
+        }
+        // Success promises the data phase delivered everything; anything
+        // less is a hole the pre-zeroed buffer would silently paper over.
+        if cqe.status.isSuccess, command.receivedBytes != command.readBuffer.count {
+            let reason = "read completed successfully with \(command.receivedBytes) of \(command.readBuffer.count) bytes delivered"
+            // The caller gets the error every other pending command gets when
+            // the connection closes, so the controller recovers and retries
+            // it; the private fatal error is for the read loop alone.
+            command.completion.complete(.failure(NVMeConnectionError.protocolError(reason)))
+            throw fatal(.pduSequenceError, reason)
+        }
+        debugLog?("NVMeQueue.\(#function) queueID=\(queueID) cid=\(cqe.commandID)"
+                  + " sct=\(cqe.status.sct) sc=\(cqe.status.sc)"
+                  + " receivedBytes=\(command.receivedBytes) expectedRead=\(command.readBuffer.count)")
+        let completion = NVMeCompletion(cqe: cqe, data: command.readBuffer,
+                                        receivedBytes: command.receivedBytes, connectionID: connectionID)
+        command.completion.complete(.success(completion))
+    }
+
+    private func handleC2HData(_ pdu: C2HDataPDU, dataDigestFailed: Bool) throws {
+        debugLog?("NVMeQueue.\(#function) queueID=\(queueID) cid=\(pdu.cccid) offset=\(pdu.dataOffset)"
+                  + " bytes=\(pdu.data.count) last=\(pdu.last) success=\(pdu.success)"
+                  + " dataDigestFailed=\(dataDigestFailed)")
+        guard let command = pending[pdu.cccid] else {
+            throw fatal(.invalidPDUHeader, fei: FieldOffset.cccid, "C2HData for unknown CID \(pdu.cccid)")
+        }
+        if dataDigestFailed { command.dataDigestFailed = true }
+        guard !command.dataComplete else {
+            throw fatal(.pduSequenceError, "C2HData for CID \(pdu.cccid) after its LAST_PDU")
+        }
+        guard !pdu.success || pdu.last else {
+            throw fatal(.invalidPDUHeader, fei: FieldOffset.flags,
+                        "C2HData for CID \(pdu.cccid) has SUCCESS set without LAST_PDU")
+        }
+        let offset = Int(pdu.dataOffset)
+        guard offset == command.receivedBytes else {
+            throw fatal(.pduSequenceError,
+                "non-contiguous C2HData for CID \(pdu.cccid): offset \(offset), expected \(command.receivedBytes)")
+        }
+        let end = offset + pdu.data.count
+        guard end <= command.readBuffer.count else {
+            throw fatal(.dataTransferOutOfRange,
+                "C2HData outside the read buffer (offset \(offset), \(pdu.data.count) bytes of \(command.readBuffer.count))")
+        }
+        if !command.terminated {
+            command.readBuffer.setSub(pdu.data, offset)
+        }
+        command.receivedBytes += pdu.data.count
+        command.dataComplete = pdu.last
+        if pdu.success {
+            // No CapsuleResp follows: this PDU is the completion.
+            try complete(CQE(sqID: queueID, commandID: pdu.cccid, status: .success))
+        }
+    }
+
+    /// Answer an R2T with H2CData PDUs, each at most MAXH2CDATA, LAST_PDU on
+    /// the final one for this R2T. A cancelled command still answers: the
+    /// controller must collect the solicited data before it can complete.
+    private func handleR2T(_ r2t: NVMeR2TPDU) async throws {
+        guard let command = pending[r2t.cccid] else {
+            throw fatal(.invalidPDUHeader, fei: FieldOffset.cccid, "R2T for unknown CID \(r2t.cccid)")
+        }
+        let start = Int(r2t.offset)
+        let length = Int(r2t.length)
+        guard start == command.solicitedBytes else {
+            throw fatal(.pduSequenceError,
+                "non-contiguous R2T for CID \(r2t.cccid): offset \(start), expected \(command.solicitedBytes)")
+        }
+        guard length > 0, start + length <= command.writeData.count else {
+            throw fatal(.dataTransferOutOfRange,
+                "R2T requests bytes beyond the write buffer (offset \(start), \(length) of \(command.writeData.count))")
+        }
+        command.solicitedBytes = start + length
+        let chunk = max(1, Int(maxH2CData))
+        var offset = start
+        let end = start + length
+        while offset < end {
+            let next = min(offset + chunk, end)
+            let pdu = H2CDataPDU(cccid: r2t.cccid, ttag: r2t.ttag, dataOffset: UInt32(offset),
+                                 data: Data(command.writeData.sub(offset, next - offset)),
+                                 last: next == end)
+            try await sendRaw(serializer.serialize(pdu.encode()))
+            offset = next
+        }
+    }
+
+    private func close(reason: NVMeConnectionError) async {
+        guard state != .closed else { return }
+        state = .closed
+        closeReason = reason
+        readLoop?.cancel()
+        await transport.close()
+
+        for (_, command) in pending {
+            command.completion.complete(.failure(reason))
+        }
+        pending = [:]
+        for w in slotWaiters { w.complete(.failure(reason)) }
+        slotWaiters = []
+        for w in closeWaiters { w.resume(returning: reason) }
+        closeWaiters = []
+    }
+}

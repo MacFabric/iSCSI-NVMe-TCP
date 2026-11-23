@@ -176,6 +176,7 @@
 		24DACD1EADC8A79E88E09803 /* AutoAttacher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoAttacher.swift; sourceTree = "<group>"; };
 		3071CFD21D92FAF593C1D5E5 /* DiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryView.swift; sourceTree = "<group>"; };
 		3079D57585D96DD2ADCA8879 /* iSCSIFSExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iSCSIFSExtension.swift; sourceTree = "<group>"; };
+		34F0FB3CB88949583C5C1B39 /* NVMeKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = NVMeKit; path = ../Vendor/NVMeKit; sourceTree = SOURCE_ROOT; };
 		3585A0A81F56D11FC7F6743D /* SetupStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupStep.swift; sourceTree = "<group>"; };
 		35C8645A7CB24A5D14623009 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		3CFABF815361ED5F578A112C /* LastPortal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LastPortal.swift; sourceTree = "<group>"; };
@@ -472,6 +473,7 @@
 			isa = PBXGroup;
 			children = (
 				B108445933BF3FEBDE8266D4 /* iSCSI-NVMe-TCP */,
+				34F0FB3CB88949583C5C1B39 /* NVMeKit */,
 			);
 			name = Packages;
 			sourceTree = "<group>";
@@ -656,10 +658,10 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				3D2D3134938EAC31722D5B94 /* XCRemoteSwiftPackageReference "FabricKit" */,
-				DE277423F627209B75E206CC /* XCRemoteSwiftPackageReference "NVMeKit" */,
 				346247409A4358FD8A91EE1C /* XCRemoteSwiftPackageReference "Sparkle" */,
 				E85A5533EEC26F09E9923D43 /* XCRemoteSwiftPackageReference "iSCSIKit" */,
 				D85DA11661A4B873530570D1 /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
+				D1DF6327CA88BBF659473D69 /* XCLocalSwiftPackageReference "../Vendor/NVMeKit" */,
 				D1EB709EF73F890A95E1304A /* XCLocalSwiftPackageReference ".." */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -1241,6 +1243,10 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
+		D1DF6327CA88BBF659473D69 /* XCLocalSwiftPackageReference "../Vendor/NVMeKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../Vendor/NVMeKit;
+		};
 		D1EB709EF73F890A95E1304A /* XCLocalSwiftPackageReference ".." */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ..;
@@ -1270,14 +1276,6 @@
 			requirement = {
 				kind = exactVersion;
 				version = 1.8.2;
-			};
-		};
-		DE277423F627209B75E206CC /* XCRemoteSwiftPackageReference "NVMeKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/MacFabric/NVMeKit";
-			requirement = {
-				kind = exactVersion;
-				version = 0.1.0;
 			};
 		};
 		E85A5533EEC26F09E9923D43 /* XCRemoteSwiftPackageReference "iSCSIKit" */ = {
@@ -1351,7 +1349,6 @@
 		};
 		EF08C9A09525965FA80E5F76 /* NVMeKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = DE277423F627209B75E206CC /* XCRemoteSwiftPackageReference "NVMeKit" */;
 			productName = NVMeKit;
 		};
 /* End XCSwiftPackageProductDependency section */

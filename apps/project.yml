@@ -4,7 +4,8 @@
 # regenerate the committed .pbxproj so CI's drift check stays quiet.
 #
 # The protocol engines (iSCSIKit, NVMeKit) and the layer under them
-# (FabricKit) are MacFabric packages of their own. The daemon core, the
+# (FabricKit) originate as MacFabric packages. NVMeKit is vendored below.
+# The daemon core, the
 # volume data path and InitiatorShared live in the parent SwiftPM package,
 # referenced as a local package, so the app and extensions share the exact
 # code that `swift test` and real-NAS verification exercise.
@@ -42,14 +43,13 @@ packages:
   # The protocol engines. The local package depends on them too, but an Xcode
   # target can link only a product of a package this project names. Exact for
   # the reason Sparkle is, and the versions Package.resolved pins. Move all
-  # three together: iSCSIKit and NVMeKit each name the FabricKit they were
-  # released against.
+  # remote versions together. NVMeKit uses a checked-in source snapshot.
   iSCSIKit:
     url: https://github.com/MacFabric/iSCSIKit
     exactVersion: 0.1.0
+  # Same checked-in snapshot as Package.swift; includes read-bench diagnostics.
   NVMeKit:
-    url: https://github.com/MacFabric/NVMeKit
-    exactVersion: 0.1.0
+    path: ../Vendor/NVMeKit
   # No target links FabricKit directly; it is named so that its version is
   # pinned here rather than left to whichever 0.1.x is newest on build day.
   FabricKit:

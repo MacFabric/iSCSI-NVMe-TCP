@@ -1,5 +1,7 @@
 .build/
 .swiftpm/
+# SwiftPM editable dependency links (swift package edit).
+Packages/
 *.xcodeproj/xcuserdata/
 *.xcworkspace/xcuserdata/
 DerivedData/

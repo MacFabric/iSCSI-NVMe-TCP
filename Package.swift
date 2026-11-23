@@ -36,7 +36,9 @@ let package = Package(
         // minor release may break API; Package.resolved pins the exact
         // version, and apps/project.yml must name the same one (CLAUDE.md).
         .package(url: "https://github.com/MacFabric/iSCSIKit", .upToNextMinor(from: "0.1.0")),
-        .package(url: "https://github.com/MacFabric/NVMeKit", .upToNextMinor(from: "0.1.0")),
+        // The reviewed logging API is shipped with this repository. Xcode uses
+        // the same source snapshot, without a developer-local package override.
+        .package(path: "Vendor/NVMeKit"),
     ],
     targets: [
         // Everything the app, the daemon, the FSKit extension and iscsictl

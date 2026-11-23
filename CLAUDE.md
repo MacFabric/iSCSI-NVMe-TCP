@@ -123,22 +123,25 @@ its integration suite against its own mock target, its ASan fuzz harness
   and `NVMeMockTarget` products that this repo's daemon tests and
   `iscsi-target-sim` use.
 
-Versions are pinned twice, and both must move together. `Package.swift` takes
-an up-to-next-minor range and `Package.resolved` pins it for `swift test`;
-`apps/project.yml` names all three with `exactVersion`, because the app has no
-committed `Package.resolved` and Xcode would otherwise build whatever is
-newest. To ship a kit change: tag the kit (FabricKit first when it changed;
-iSCSIKit and NVMeKit name the FabricKit range they need), then here
-`swift package update`, the three `exactVersion` lines, and a regenerated
-`.pbxproj`.
+Remote kit versions are pinned twice, and both must move together.
+`Package.resolved` pins SwiftPM; `apps/project.yml` pins Xcode with
+`exactVersion`. Update both and regenerate `.pbxproj` when updating a remote
+kit.
 
-To change a kit and the app together, check the kit out beside this one and
-`swift package edit iSCSIKit --path ../iSCSIKit` (in Xcode, drag the folder
-into the project, which overrides the remote package). `swift package unedit`
-before committing; a `.package(path:)` must never be committed here. Tests in
-this repo still `@testable import` the kits, which works because SwiftPM builds
-dependencies with testing enabled in debug — but anything internal they reach
-is not API, and a kit release may move it.
+NVMeKit is currently an explicit exception: both build systems use the
+checked-in `Vendor/NVMeKit` package, based on upstream 0.1.0 plus the
+read-bench diagnostics. This relative path is part of the repository, not a
+local checkout override. Keep its source, license, provenance (`VENDOR.md`),
+and tests together. CI runs its suite separately because SwiftPM does not run
+dependency tests as part of the root suite. See `VENDOR.md` before updating
+or returning to a published upstream version.
+
+For temporary development of a remote kit, use `swift package edit iSCSIKit
+--path ../iSCSIKit` (or the corresponding Xcode local override), then
+`swift package unedit` before committing. Never commit dependencies on paths
+outside this repository. Tests here still `@testable import` the kits, which
+works because SwiftPM builds dependencies with testing enabled in debug;
+internal symbols are not stable API.
 
 ### Releasing
 

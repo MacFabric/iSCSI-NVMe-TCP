@@ -1,5 +1,5 @@
 {
-  "originHash" : "d7e196dc64737b4ca113ed0d30d2bf2931f2c38265cf4ebef3c39afd21b30182",
+  "originHash" : "a1eb8356f807136f9670842b41ca8533b5fd4b03884b33042a713385fad570fd",
   "pins" : [
     {
       "identity" : "fabrickit",
@@ -16,15 +16,6 @@
       "location" : "https://github.com/MacFabric/iSCSIKit",
       "state" : {
         "revision" : "4e02b9810c7241864f3aec1c35a4e6059bc2d734",
-        "version" : "0.1.0"
-      }
-    },
-    {
-      "identity" : "nvmekit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/MacFabric/NVMeKit",
-      "state" : {
-        "revision" : "d09daac70407b469e2e24c1439dceca5c7039a19",
         "version" : "0.1.0"
       }
     },
