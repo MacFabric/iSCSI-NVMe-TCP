@@ -1616,6 +1616,11 @@ met. The same LUN path that gives an image-file guest 7 to 10 MiB/s gives
 a raw-device guest 80 to 95: the cost of an image file on an attached
 volume is APFS above the disk, not the initiator under it. The raw device
 still has no flush (above), so durability is the target's flush policy.
+The same suite on the app's own raw-device attach (build 57.5, the
+"Attach as a raw device" option, writers on `ssd-vms` as HFS+ through
+DiskImages2): framework 91.7 MiB/s alone and 79.6 and 72.0 beside the
+writers, QEMU 90.4 alone and 60.6 and 61.8 beside; no guest write over
+0.92 s.
 
 Not tried: the raw device in the severe state on a real Mac (it needs a
 reboot).
